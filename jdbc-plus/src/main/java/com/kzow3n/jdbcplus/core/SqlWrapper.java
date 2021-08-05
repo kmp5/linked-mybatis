@@ -1035,10 +1035,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     public <T> Page<T> queryForObjectPage(Class<T> clazz, JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
         int total = (int) queryForCount(jdbcTemplate);
-        String orderBy = this.orderBy.toString();
-        if (!StringUtils.isBlank(orderBy)) {
-            sql += orderBy;
-        }
+        sql += orderBy.toString();
         int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
         Page<T> page = new Page<>();
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
@@ -1057,10 +1054,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     public Page<Map<String, Object>> queryForMapPage(JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
         int total = (int) queryForCount(jdbcTemplate);
-        String orderBy = this.orderBy.toString();
-        if (!StringUtils.isBlank(orderBy)) {
-            sql += orderBy;
-        }
+        sql += orderBy.toString();
         int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
         Page<Map<String, Object>> page = new Page<>();
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
