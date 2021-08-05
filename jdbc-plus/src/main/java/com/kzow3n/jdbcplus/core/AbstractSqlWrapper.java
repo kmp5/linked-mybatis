@@ -94,16 +94,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         return tableInfos.get(tableIndex - 1);
     }
 
-    protected Class<?> getTableClassByIndex(Integer tableIndex) {
-        if (tableIndex == null) {
-            return null;
-        }
-        if (tableIndex < 1) {
-            return null;
-        }
-        return tableInfos.get(tableIndex - 1).getTableClass();
-    }
-
     protected void addColumnInfo(Integer tableIndex, String tableColumns, String beanColumns, String columnFormat) {
         ColumnInfo columnInfo = new ColumnInfo();
         columnInfo.setTableIndex(tableIndex);
@@ -230,10 +220,11 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
 
     protected String formatColumns() {
         if (!CollectionUtils.isEmpty(selectAllTableInfos)) {
-            for (TableInfo tableInfo : selectAllTableInfos) {
-                Integer tableIndex = tableInfo.getTableIndex();
-                Boolean formatBeanColumn = tableInfo.getFormatBeanColumn();
-                Class<?> clazz = getTableClassByIndex(tableIndex);
+            for (TableInfo selectAllTableInfo : selectAllTableInfos) {
+                Integer tableIndex = selectAllTableInfo.getTableIndex();
+                Boolean formatBeanColumn = selectAllTableInfo.getFormatBeanColumn();
+                TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+                Class<?> clazz = tableInfo.getTableClass();
                 if (clazz == null) {
                     ColumnInfo columnInfo = new ColumnInfo();
                     columnInfo.setTableIndex(tableIndex);
