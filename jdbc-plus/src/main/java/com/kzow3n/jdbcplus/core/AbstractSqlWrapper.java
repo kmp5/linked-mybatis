@@ -252,7 +252,13 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         List<String> formats = new ArrayList<>();
 
         for (ColumnInfo columnInfo : columnInfos) {
-            String tableId = getTableInfoByIndex(columnInfo.getTableIndex()).getTableId();
+            Integer tableIndex = columnInfo.getTableIndex();
+            if (tableIndex == null) {
+                formats.add(String.format("%s %s", columnInfo.getTableColumns(), columnInfo.getBeanColumns()));
+                continue;
+            }
+            TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+            String tableId = tableInfo.getTableId();
             String tableColumns = columnInfo.getTableColumns();
             String beanColumns = columnInfo.getBeanColumns();
             String columnFormat = columnInfo.getColumnFormat();
