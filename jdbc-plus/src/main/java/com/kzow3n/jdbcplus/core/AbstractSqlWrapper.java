@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Sql构筑器基本方法类
+ * Sql构造器基本方法类
  *
  * @author owen
  * @since 2021/8/4

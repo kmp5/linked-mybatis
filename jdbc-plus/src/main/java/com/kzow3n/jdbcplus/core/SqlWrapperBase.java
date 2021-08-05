@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Sql构筑器的一些私有方法
+ * Sql构造器的一些私有方法
  *
  * @author owen
  * @since 2021/8/4

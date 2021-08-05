@@ -1,12 +1,19 @@
 package com.kzow3n.jdbcplus.core;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.common.primitives.Ints;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -21,6 +28,8 @@ public class SqlWrapper extends AbstractSqlWrapper {
     public SqlWrapper() {
         init();
     }
+
+    //region 拼接基本Sql
 
     public SqlWrapper distinct() {
         blnDistinct = true;
@@ -290,5 +299,132 @@ public class SqlWrapper extends AbstractSqlWrapper {
         formatFullSql();
         return this;
     }
+
+    //endregion
+
+    //region 条件构造器
+
+    public SqlWrapper or() {
+        blnOr = true;
+        return this;
+    }
+
+    public SqlWrapper or(Consumer<SqlWrapper> consumer) {
+        blnOr = true;
+        spendOperator();
+        sqlBuilder.append("(");
+        blnOpenBracket = true;
+        consumer.accept(this);
+        sqlBuilder.append(") ");
+        return this;
+    }
+
+    public SqlWrapper and(Consumer<SqlWrapper> consumer) {
+        spendOperator();
+        sqlBuilder.append("(");
+        blnOpenBracket = true;
+        consumer.accept(this);
+        sqlBuilder.append(") ");
+        return this;
+    }
+
+    //endregion
+
+    //region 查询器
+
+    public long queryForCount(JdbcTemplate jdbcTemplate) {
+        String sqlCount;
+        if (CollectionUtils.isEmpty(columnInfos)) {
+            sqlCount = String.format(sqlBuilder.toString(), "count(*) selectCount");
+        }
+        else {
+            sqlCount = String.format("select count(*) selectCount from (%s) t", sql);
+        }
+        log.info(sqlCount);
+        int[] typeArr = Ints.toArray(argTypes);
+        Map<String, Object> map = jdbcTemplate.queryForMap(sqlCount, args.toArray(), typeArr);
+        return (long) map.get("selectCount");
+    }
+
+    public <T> T queryForObject(Class<T> clazz, JdbcTemplate jdbcTemplate) {
+        sql += orderBy.toString();
+        log.info(sql);
+        int[] typeArr = Ints.toArray(argTypes);
+        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        Map<String, Object> map = mapList.stream().findFirst().orElse(null);
+        if (map == null) {
+            return null;
+        }
+        updateMap(map, clazz);
+        return mapToBean(map, clazz);
+    }
+
+    public Map<String, Object> queryForMap(JdbcTemplate jdbcTemplate) {
+        sql += orderBy.toString();
+        log.info(sql);
+        int[] typeArr = Ints.toArray(argTypes);
+        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        return mapList.stream().findFirst().orElse(null);
+    }
+
+    public <T> List<T> queryForObjects(Class<T> clazz, JdbcTemplate jdbcTemplate) {
+        sql += orderBy.toString();
+        log.info(sql);
+        int[] typeArr = Ints.toArray(argTypes);
+        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
+        }
+        updateMapList(mapList, clazz);
+        return mapsToBeans(mapList, clazz);
+    }
+
+    public List<Map<String, Object>> queryForMaps(JdbcTemplate jdbcTemplate) {
+        sql += orderBy.toString();
+        log.info(sql);
+        int[] typeArr = Ints.toArray(argTypes);
+        return jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+    }
+
+    public <T> Page<T> queryForObjectPage(Class<T> clazz, JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
+        int total = (int) queryForCount(jdbcTemplate);
+        String orderBy = this.orderBy.toString();
+        if (!StringUtils.isBlank(orderBy)) {
+            sql += orderBy;
+        }
+        int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
+        Page<T> page = new Page<>();
+        page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
+        sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
+        log.info(sql);
+        int[] typeArr = Ints.toArray(argTypes);
+        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        if (CollectionUtils.isEmpty(mapList)) {
+            return page;
+        }
+        updateMapList(mapList, clazz);
+        List<T> list = mapsToBeans(mapList, clazz);
+        page.setRecords(list);
+        return page;
+    }
+
+    public Page<Map<String, Object>> queryForMapPage(JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
+        int total = (int) queryForCount(jdbcTemplate);
+        String orderBy = this.orderBy.toString();
+        if (!StringUtils.isBlank(orderBy)) {
+            sql += orderBy;
+        }
+        int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
+        Page<Map<String, Object>> page = new Page<>();
+        page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
+        sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
+        log.info(sql);
+        int[] typeArr = Ints.toArray(argTypes);
+        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        page.setRecords(mapList);
+        return page;
+    }
+
+    //endregion
 
 }
