@@ -1,7 +1,9 @@
 package com.kzow3n.jdbcplus.core;
 
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.kzow3n.jdbcplus.pojo.ColumnInfo;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
+import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
@@ -9,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -158,6 +161,8 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         String tableName = getTableNameByClass(clazz);
         TableInfo tableInfo = new TableInfo(tableId, clazz);
         tableInfos.add(tableInfo);
+        int tableIndex = tableInfos.indexOf(tableInfo);
+        tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
         if (blnDistinct) {
             blnDistinct = false;
             sqlBuilder.append("select distinct %s from ").append(String.format("%s %s ", tableName, tableId));
@@ -171,6 +176,8 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         TableInfo tableInfo = new TableInfo();
         tableInfo.setTableId(tableId);
         tableInfos.add(tableInfo);
+        int tableIndex = tableInfos.indexOf(tableInfo);
+        tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
         SqlWrapper sqlWrapper = new SqlWrapper();
         consumer.accept(sqlWrapper);
         args.addAll(sqlWrapper.getArgs());
@@ -188,6 +195,8 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         String tableName = getTableNameByClass(clazz);
         TableInfo tableInfo = new TableInfo(tableId, clazz);
         tableInfos.add(tableInfo);
+        int tableIndex = tableInfos.indexOf(tableInfo);
+        tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
         sqlBuilder.append(String.format("%s %s %s ", joinType, tableName, tableId));
     }
 
@@ -195,6 +204,8 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         TableInfo tableInfo = new TableInfo();
         tableInfo.setTableId(tableId);
         tableInfos.add(tableInfo);
+        int tableIndex = tableInfos.indexOf(tableInfo);
+        tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
         SqlWrapper sqlWrapper = new SqlWrapper();
         consumer.accept(sqlWrapper);
         sqlBuilder.append(String.format("%s (%s) %s ", joinType, sqlWrapper.getSql(), tableId));
@@ -293,5 +304,331 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             }
         }
         return String.join(",", formats);
+    }
+
+    /**
+     * 是否空
+     */
+    protected void isNull(String tableId, String column) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s is null ", tableId, column));
+    }
+
+    /**
+     * 是否非空
+     */
+    protected void isNotNull(String tableId, String column) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s is not null ", tableId, column));
+    }
+
+    /**
+     * 等于
+     */
+    protected void eq(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+        spendOperator();
+        if (sqlWrapper == null) {
+            if (arg != null) {
+                sqlBuilder.append(String.format("%s.%s = ? ", tableId, column));
+                args.add(arg);
+                argTypes.add(getObjectSqlType(arg));
+            }
+            else {
+                sqlBuilder.append(String.format("%s.%s is null ", tableId, column));
+            }
+        }
+        else {
+            sqlBuilder.append(String.format("%s.%s = (%s) ", tableId, column, sqlWrapper.getSql()));
+            args.addAll(sqlWrapper.getArgs());
+            argTypes.addAll(sqlWrapper.getArgTypes());
+        }
+    }
+
+    /**
+     * 不等于
+     */
+    protected void ne(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+        spendOperator();
+        if (sqlWrapper == null) {
+            if (arg != null) {
+                sqlBuilder.append(String.format("%s.%s <> ? ", tableId, column));
+                args.add(arg);
+                argTypes.add(getObjectSqlType(arg));
+            }
+            else {
+                sqlBuilder.append(String.format("%s.%s is not null ", tableId, column));
+            }
+        }
+        else {
+            sqlBuilder.append(String.format("%s.%s <> (%s) ", tableId, column, sqlWrapper.getSql()));
+            args.addAll(sqlWrapper.getArgs());
+            argTypes.addAll(sqlWrapper.getArgTypes());
+        }
+    }
+
+    /**
+     * 大于
+     */
+    protected void gt(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+        compare(tableId, column, arg, sqlWrapper, ">");
+    }
+
+    /**
+     * 大于等于
+     */
+    protected void ge(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+        compare(tableId, column, arg, sqlWrapper, ">=");
+    }
+
+    /**
+     * 小于
+     */
+    protected void lt(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+        compare(tableId, column, arg, sqlWrapper, "<");
+    }
+
+    /**
+     * 大于等于
+     */
+    protected void le(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+        compare(tableId, column, arg, sqlWrapper, "<=");
+    }
+
+    private void compare(String tableId, String column, Object arg, SqlWrapper sqlWrapper, String compareType) {
+        spendOperator();
+        if (sqlWrapper == null) {
+            sqlBuilder.append(String.format("%s.%s %s ? ", tableId, column, compareType));
+            args.add(arg);
+            argTypes.add(getObjectSqlType(arg));
+        }
+        else {
+            sqlBuilder.append(String.format("%s.%s %s (%s) ", tableId, column, compareType, sqlWrapper.getSql()));
+            args.addAll(sqlWrapper.getArgs());
+            argTypes.addAll(sqlWrapper.getArgTypes());
+        }
+    }
+
+    /**
+     * like '%值%'
+     */
+    protected void like(String tableId, String column, String arg) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s like concat(?, ?, ?) ", tableId, column));
+        Integer argType = Types.NVARCHAR;
+        args.add("%");
+        argTypes.add(argType);
+        args.add(arg);
+        argTypes.add(argType);
+        args.add("%");
+        argTypes.add(argType);
+    }
+
+    /**
+     * like '%值'
+     */
+    protected void likeLeft(String tableId, String column, String arg) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s like concat(?, ?) ", tableId, column));
+        Integer argType = Types.NVARCHAR;
+        args.add("%");
+        argTypes.add(argType);
+        args.add(arg);
+        argTypes.add(argType);
+    }
+
+    /**
+     * like '值%'
+     */
+    protected void likeRight(String tableId, String column, String arg) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s like concat(?, ?) ", tableId, column));
+        Integer argType = Types.NVARCHAR;
+        args.add(arg);
+        argTypes.add(argType);
+        args.add("%");
+        argTypes.add(argType);
+    }
+
+    /**
+     * not like '%值%'
+     */
+    protected void notLike(String tableId, String column, String arg) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s not like concat(?, ?, ?) ", tableId, column));
+        Integer argType = Types.NVARCHAR;
+        args.add("%");
+        argTypes.add(argType);
+        args.add(arg);
+        argTypes.add(argType);
+        args.add("%");
+        argTypes.add(argType);
+    }
+
+    /**
+     * between 值1 and 值2
+     */
+    protected void between(String tableId, String column, Object arg1, Object arg2) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s between ? and ? ", tableId, column));
+        int sqlType = getObjectSqlType(arg1);
+        args.add(arg1);
+        argTypes.add(sqlType);
+        args.add(arg2);
+        argTypes.add(sqlType);
+    }
+
+    /**
+     * not between 值1 and 值2
+     */
+    protected void notBetween(String tableId, String column, Object arg1, Object arg2) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s not between ? and ? ", tableId, column));
+        int sqlType = getObjectSqlType(arg1);
+        args.add(arg1);
+        argTypes.add(sqlType);
+        args.add(arg2);
+        argTypes.add(sqlType);
+    }
+
+    /**
+     * in
+     */
+    protected void in(String tableId, String column, List<?> args, SqlWrapper sqlWrapper) {
+        spendOperator();
+        if (sqlWrapper == null) {
+            this.args.addAll(args);
+            int sqlType = getObjectSqlType(args.get(0));
+            List<String> params = new ArrayList<>();
+            for (int i = 0; i < args.size(); i ++) {
+                params.add("?");
+                argTypes.add(sqlType);
+            }
+            sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, String.join(",", params)));
+        }
+        else {
+            sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, sqlWrapper.getSql()));
+            this.args.addAll(sqlWrapper.getArgs());
+            argTypes.addAll(sqlWrapper.getArgTypes());
+        }
+    }
+
+    /**
+     * not in
+     */
+    protected void notIn(String tableId, String column, List<?> args, SqlWrapper sqlWrapper) {
+        spendOperator();
+        if (sqlWrapper == null) {
+            this.args.addAll(args);
+            int sqlType = getObjectSqlType(args.get(0));
+            List<String> params = new ArrayList<>();
+            for (int i = 0; i < args.size(); i ++) {
+                params.add("?");
+                argTypes.add(sqlType);
+            }
+            sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, String.join(",", params)));
+        }
+        else {
+            sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, sqlWrapper.getSql()));
+            this.args.addAll(sqlWrapper.getArgs());
+            argTypes.addAll(sqlWrapper.getArgTypes());
+        }
+    }
+
+    /**
+     * exists(sql)
+     */
+    protected void appendExists(String sql, Object... args) {
+        spendOperator();
+        if (args != null) {
+            for (Object arg : args) {
+                this.args.add(arg);
+                this.argTypes.add(getObjectSqlType(arg));
+            }
+        }
+        sqlBuilder.append(String.format("EXISTS(%s) ", sql));
+    }
+
+    /**
+     * not exists(sql)
+     */
+    protected void appendNotExists(String sql, Object... args) {
+        spendOperator();
+        if (args != null) {
+            for (Object arg : args) {
+                this.args.add(arg);
+                this.argTypes.add(getObjectSqlType(arg));
+            }
+        }
+        sqlBuilder.append(String.format("NOT EXISTS(%s) ", sql));
+    }
+
+    /**
+     * 添加groupBy的column
+     */
+    @SafeVarargs
+    protected final <K> void groupBy(TableInfo tableInfo, SFunction<K, ?>... fns) {
+        String tableId = tableInfo.getTableId();
+        for (SFunction<K, ?> fn : fns) {
+            Field field = ColumnUtils.getField(fn);
+            String tableColumn = addColumnInfoByField(tableInfo, field, true, null, null);
+            groupColumns.add(String.format("%s.%s", tableId, tableColumn));
+        }
+    }
+
+    protected final <K, M> void groupBy(TableInfo tableInfo, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+        String tableId = tableInfo.getTableId();
+        Field field1 = ColumnUtils.getField(fn1);
+        Field field2 = ColumnUtils.getField(fn2);
+        String tableColumn = addColumnInfoByFields(tableInfo, field1, true, field2, null);
+        groupColumns.add(String.format("%s.%s", tableId, tableColumn));
+    }
+
+    protected final <K> void groupBy(TableInfo tableInfo, SFunction<K, ?> fn1, String beanColumn) {
+        String tableId = tableInfo.getTableId();
+        Field field1 = ColumnUtils.getField(fn1);
+        String tableColumn = addColumnInfoByField(tableInfo, field1, true, beanColumn, null);
+        groupColumns.add(String.format("%s.%s", tableId, tableColumn));
+    }
+
+    protected final <M> void groupBy(TableInfo tableInfo, String tableColumn, SFunction<M, ?> fn2) {
+        String tableId = tableInfo.getTableId();
+        Field field2 = ColumnUtils.getField(fn2);
+        String beanColumn = field2.getName();
+        addColumnInfo(tableInfo.getTableIndex(), tableColumn, beanColumn, null);
+        groupColumns.add(String.format("%s.%s", tableId, tableColumn));
+    }
+
+    protected void groupBy(TableInfo tableInfo, String tableColumn, String beanColumn) {
+        String tableId = tableInfo.getTableId();
+        addColumnInfo(tableInfo.getTableIndex(), tableColumn, beanColumn, null);
+        groupColumns.add(String.format("%s.%s", tableId, tableColumn));
+    }
+
+    /**
+     * having(sql)
+     */
+    protected void appendHaving(String sql, Object... args) {
+        if (args != null) {
+            for (Object arg : args) {
+                this.args.add(arg);
+                this.argTypes.add(getObjectSqlType(arg));
+            }
+        }
+        having = sql;
+    }
+
+    /**
+     * orderBy、orderByDesc、thenBy、thenByDesc
+     */
+    protected void orderBy(String tableId, String column, boolean blnFirst, boolean blnDesc) {
+        if (blnFirst) {
+            orderBy.append(String.format("order by %s.%s", tableId, column));
+        }
+        else {
+            orderBy.append(String.format(",%s.%s", tableId, column));
+        }
+        if (blnDesc) {
+            orderBy.append(" desc");
+        }
     }
 }

@@ -97,13 +97,6 @@ public class SqlWrapperBase {
         }
     }
 
-    protected String getJoinString(String[] arr) {
-        if (arr == null) {
-            return "";
-        }
-        return String.join(",", arr);
-    }
-
     protected String getTableNameByClass(Class<?> clazz) {
         TableName annotation = clazz.getAnnotation(TableName.class);
         if (annotation == null) {
@@ -143,7 +136,7 @@ public class SqlWrapperBase {
         return field.getName();
     }
 
-    protected Integer getObjectSqlType(Object object) {
+    protected int getObjectSqlType(Object object) {
         int type;
         String className = object.getClass().getName();
         switch (className) {

@@ -12,6 +12,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -325,6 +326,652 @@ public class SqlWrapper extends AbstractSqlWrapper {
         blnOpenBracket = true;
         consumer.accept(this);
         sqlBuilder.append(") ");
+        return this;
+    }
+
+    public <K> SqlWrapper isNull(Integer tableIndex, SFunction<K, ?> fn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        isNull(tableId, column);
+        return this;
+    }
+
+    public SqlWrapper isNull(Integer tableIndex, String column) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        isNull(tableId, column);
+        return this;
+    }
+
+    public <K> SqlWrapper isNotNull(Integer tableIndex, SFunction<K, ?> fn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        isNotNull(tableId, column);
+        return this;
+    }
+
+    public SqlWrapper isNotNull(Integer tableIndex, String column) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        isNotNull(tableId, column);
+        return this;
+    }
+
+    public <K> SqlWrapper eq(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        eq(tableId, column, arg, null);
+        return this;
+    }
+
+    public SqlWrapper eq(Integer tableIndex, String column, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        eq(tableId, column, arg, null);
+        return this;
+    }
+
+    public <K> SqlWrapper eq(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        eq(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper eq(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        eq(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public <K> SqlWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        ne(tableId, column, arg, null);
+        return this;
+    }
+
+    public SqlWrapper ne(Integer tableIndex, String column, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        ne(tableId, column, arg, null);
+        return this;
+    }
+
+    public <K> SqlWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        ne(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper ne(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        ne(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public <K> SqlWrapper gt(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        gt(tableId, column, arg, null);
+        return this;
+    }
+
+    public SqlWrapper gt(Integer tableIndex, String column, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        gt(tableId, column, arg, null);
+        return this;
+    }
+
+    public <K> SqlWrapper gt(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        gt(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper gt(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        gt(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public <K> SqlWrapper ge(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        ge(tableId, column, arg, null);
+        return this;
+    }
+
+    public SqlWrapper ge(Integer tableIndex, String column, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        ge(tableId, column, arg, null);
+        return this;
+    }
+
+    public <K> SqlWrapper ge(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        ge(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper ge(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        ge(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public <K> SqlWrapper lt(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        lt(tableId, column, arg, null);
+        return this;
+    }
+
+    public SqlWrapper lt(Integer tableIndex, String column, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        lt(tableId, column, arg, null);
+        return this;
+    }
+
+    public <K> SqlWrapper lt(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        lt(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper lt(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        lt(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public <K> SqlWrapper le(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        le(tableId, column, arg, null);
+        return this;
+    }
+
+    public SqlWrapper le(Integer tableIndex, String column, Object arg) {
+        if (arg == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        le(tableId, column, arg, null);
+        return this;
+    }
+
+    public <K> SqlWrapper le(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        le(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper le(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        le(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public <K> SqlWrapper like(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        like(tableId, column, arg);
+        return this;
+    }
+
+    public SqlWrapper like(Integer tableIndex, String column, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        like(tableId, column, arg);
+        return this;
+    }
+
+    public <K> SqlWrapper likeLeft(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        likeLeft(tableId, column, arg);
+        return this;
+    }
+
+    public SqlWrapper likeLeft(Integer tableIndex, String column, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        likeLeft(tableId, column, arg);
+        return this;
+    }
+
+    public <K> SqlWrapper likeRight(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        likeRight(tableId, column, arg);
+        return this;
+    }
+
+    public SqlWrapper likeRight(Integer tableIndex, String column, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        likeRight(tableId, column, arg);
+        return this;
+    }
+
+    public <K> SqlWrapper notLike(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        notLike(tableId, column, arg);
+        return this;
+    }
+
+    public SqlWrapper notLike(Integer tableIndex, String column, String arg) {
+        if (StringUtils.isBlank(arg)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        notLike(tableId, column, arg);
+        return this;
+    }
+
+    public <K> SqlWrapper between(Integer tableIndex, SFunction<K, ?> fn, Object arg1, Object arg2) {
+        if (arg1 == null || arg2 == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        between(tableId, column, arg1, arg2);
+        return this;
+    }
+
+    public SqlWrapper between(Integer tableIndex, String column, Object arg1, Object arg2) {
+        if (arg1 == null || arg2 == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        between(tableId, column, arg1, arg2);
+        return this;
+    }
+
+    public <K> SqlWrapper notBetween(Integer tableIndex, SFunction<K, ?> fn, Object arg1, Object arg2) {
+        if (arg1 == null || arg2 == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        notBetween(tableId, column, arg1, arg2);
+        return this;
+    }
+
+    public SqlWrapper notBetween(Integer tableIndex, String column, Object arg1, Object arg2) {
+        if (arg1 == null || arg2 == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        notBetween(tableId, column, arg1, arg2);
+        return this;
+    }
+
+    public <K> SqlWrapper in(Integer tableIndex, SFunction<K, ?> fn, Object... args) {
+        if (args == null || args.length == 0) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        List<Object> list = Arrays.asList(args);
+        in(tableId, column, list, null);
+        return this;
+    }
+
+    public SqlWrapper in(Integer tableIndex, String column, Object... args) {
+        if (args == null || args.length == 0) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        List<Object> list = Arrays.asList(args);
+        in(tableId, column, list, null);
+        return this;
+    }
+
+    public <K> SqlWrapper in(Integer tableIndex, SFunction<K, ?> fn, List<?> args) {
+        if (CollectionUtils.isEmpty(args)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        in(tableId, column, args, null);
+        return this;
+    }
+
+    public SqlWrapper in(Integer tableIndex, String column, List<?> args) {
+        if (CollectionUtils.isEmpty(args)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        in(tableId, column, args, null);
+        return this;
+    }
+
+    public <K> SqlWrapper in(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        in(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper in(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        in(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public <K> SqlWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, Object... args) {
+        if (args == null || args.length == 0) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        List<Object> list = Arrays.asList(args);
+        notIn(tableId, column, list, null);
+        return this;
+    }
+
+    public SqlWrapper notIn(Integer tableIndex, String column, Object... args) {
+        if (args == null || args.length == 0) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        List<Object> list = Arrays.asList(args);
+        notIn(tableId, column, list, null);
+        return this;
+    }
+
+    public <K> SqlWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, List<?> args) {
+        if (CollectionUtils.isEmpty(args)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        notIn(tableId, column, args, null);
+        return this;
+    }
+
+    public SqlWrapper notIn(Integer tableIndex, String column, List<?> args) {
+        if (CollectionUtils.isEmpty(args)) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        notIn(tableId, column, args, null);
+        return this;
+    }
+
+    public <K> SqlWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        notIn(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper notIn(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        consumer.accept(sqlWrapper);
+        notIn(tableId, column, null, sqlWrapper);
+        return this;
+    }
+
+    public SqlWrapper exists(String sql, @Nullable Object... args) {
+        appendExists(sql, args);
+        return this;
+    }
+
+    public SqlWrapper notExists(String sql, @Nullable Object... args) {
+        appendNotExists(sql, args);
+        return this;
+    }
+
+    @SafeVarargs
+    public final <K> SqlWrapper groupBy(Integer tableIndex, SFunction<K, ?>... fns) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        groupBy(tableInfo, fns);
+        return this;
+    }
+
+    public final <K, M> SqlWrapper groupBy(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        groupBy(tableInfo, fn1, fn2);
+        return this;
+    }
+
+    public final <K> SqlWrapper groupBy(Integer tableIndex, SFunction<K, ?> fn1, @Nullable String beanColumn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        groupBy(tableInfo, fn1, beanColumn);
+        return this;
+    }
+
+    public final <M> SqlWrapper groupBy(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        groupBy(tableInfo, tableColumn, fn2);
+        return this;
+    }
+
+    public SqlWrapper groupBy(Integer tableIndex, String tableColumn, @Nullable String beanColumn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        groupBy(tableInfo, tableColumn, beanColumn);
+        return this;
+    }
+
+    public SqlWrapper having(String sql, @Nullable Object... args) {
+        appendHaving(sql, args);
+        return this;
+    }
+
+    public <K> SqlWrapper orderBy(Integer tableIndex, SFunction<K, ?> fn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        orderBy(tableId, column, true, false);
+        return this;
+    }
+
+    public SqlWrapper orderBy(Integer tableIndex, String column) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        orderBy(tableId, column, true, false);
+        return this;
+    }
+
+    public <K> SqlWrapper orderByDesc(Integer tableIndex, SFunction<K, ?> fn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        orderBy(tableId, column, true, true);
+        return this;
+    }
+
+    public SqlWrapper orderByDesc(Integer tableIndex, String column) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        orderBy(tableId, column, true, true);
+        return this;
+    }
+
+    public <K> SqlWrapper thenBy(Integer tableIndex, SFunction<K, ?> fn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        orderBy(tableId, column, false, false);
+        return this;
+    }
+
+    public SqlWrapper thenBy(Integer tableIndex, String column) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        orderBy(tableId, column, false, false);
+        return this;
+    }
+
+    public <K> SqlWrapper thenByDesc(Integer tableIndex, SFunction<K, ?> fn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        Field field = ColumnUtils.getField(fn);
+        String column = getColumn(tableInfo, field);
+        orderBy(tableId, column, false, true);
+        return this;
+    }
+
+    public SqlWrapper thenByDesc(Integer tableIndex, String column) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        orderBy(tableId, column, false, true);
         return this;
     }
 
