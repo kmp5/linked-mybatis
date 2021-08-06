@@ -43,9 +43,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
     protected List<Object> args;
     protected List<Integer> argTypes;
 
-    /**
-     * 初始化
-     */
     protected void init() {
         tableInfos = new ArrayList<>();
         selectAllTableInfos = new ArrayList<>();
@@ -63,9 +60,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         blnOpenBracket = false;
     }
 
-    /**
-     * 填充运算符where、or、and
-     */
     protected void spendOperator() {
         if (!blnWhere) {
             sqlBuilder.append("where ");
@@ -303,25 +297,16 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         return String.join(",", formats);
     }
 
-    /**
-     * 是否空
-     */
     protected void isNull(String tableId, String column) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s is null ", tableId, column));
     }
 
-    /**
-     * 是否非空
-     */
     protected void isNotNull(String tableId, String column) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s is not null ", tableId, column));
     }
 
-    /**
-     * 等于
-     */
     protected void eq(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
         spendOperator();
         if (sqlWrapper == null) {
@@ -341,9 +326,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         }
     }
 
-    /**
-     * 不等于
-     */
     protected void ne(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
         spendOperator();
         if (sqlWrapper == null) {
@@ -363,30 +345,18 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         }
     }
 
-    /**
-     * 大于
-     */
     protected void gt(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
         compare(tableId, column, arg, sqlWrapper, ">");
     }
 
-    /**
-     * 大于等于
-     */
     protected void ge(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
         compare(tableId, column, arg, sqlWrapper, ">=");
     }
 
-    /**
-     * 小于
-     */
     protected void lt(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
         compare(tableId, column, arg, sqlWrapper, "<");
     }
 
-    /**
-     * 大于等于
-     */
     protected void le(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
         compare(tableId, column, arg, sqlWrapper, "<=");
     }
@@ -405,9 +375,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         }
     }
 
-    /**
-     * like '%值%'
-     */
     protected void like(String tableId, String column, String arg) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s like concat(?, ?, ?) ", tableId, column));
@@ -420,9 +387,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         argTypes.add(argType);
     }
 
-    /**
-     * like '%值'
-     */
     protected void likeLeft(String tableId, String column, String arg) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s like concat(?, ?) ", tableId, column));
@@ -433,9 +397,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         argTypes.add(argType);
     }
 
-    /**
-     * like '值%'
-     */
     protected void likeRight(String tableId, String column, String arg) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s like concat(?, ?) ", tableId, column));
@@ -446,9 +407,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         argTypes.add(argType);
     }
 
-    /**
-     * not like '%值%'
-     */
     protected void notLike(String tableId, String column, String arg) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s not like concat(?, ?, ?) ", tableId, column));
@@ -461,9 +419,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         argTypes.add(argType);
     }
 
-    /**
-     * between 值1 and 值2
-     */
     protected void between(String tableId, String column, Object arg1, Object arg2) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s between ? and ? ", tableId, column));
@@ -474,9 +429,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         argTypes.add(sqlType);
     }
 
-    /**
-     * not between 值1 and 值2
-     */
     protected void notBetween(String tableId, String column, Object arg1, Object arg2) {
         spendOperator();
         sqlBuilder.append(String.format("%s.%s not between ? and ? ", tableId, column));
@@ -487,9 +439,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         argTypes.add(sqlType);
     }
 
-    /**
-     * in
-     */
     protected void in(String tableId, String column, List<?> args, SqlWrapper sqlWrapper) {
         spendOperator();
         if (sqlWrapper == null) {
@@ -509,9 +458,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         }
     }
 
-    /**
-     * not in
-     */
     protected void notIn(String tableId, String column, List<?> args, SqlWrapper sqlWrapper) {
         spendOperator();
         if (sqlWrapper == null) {
@@ -531,9 +477,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         }
     }
 
-    /**
-     * exists(sql)
-     */
     protected void appendExists(String sql, Object... args) {
         spendOperator();
         if (args != null) {
@@ -545,9 +488,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sqlBuilder.append(String.format("EXISTS(%s) ", sql));
     }
 
-    /**
-     * not exists(sql)
-     */
     protected void appendNotExists(String sql, Object... args) {
         spendOperator();
         if (args != null) {
@@ -559,9 +499,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sqlBuilder.append(String.format("NOT EXISTS(%s) ", sql));
     }
 
-    /**
-     * 添加groupBy的column
-     */
     @SafeVarargs
     protected final <K> void groupBy(TableInfo tableInfo, SFunction<K, ?>... fns) {
         String tableId = tableInfo.getTableId();
@@ -601,9 +538,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         groupColumns.add(String.format("%s.%s", tableId, tableColumn));
     }
 
-    /**
-     * having(sql)
-     */
     protected void appendHaving(String sql, Object... args) {
         if (args != null) {
             for (Object arg : args) {
@@ -614,9 +548,6 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         having = sql;
     }
 
-    /**
-     * orderBy、orderByDesc、thenBy、thenByDesc
-     */
     protected void orderBy(String tableId, String column, boolean blnFirst, boolean blnDesc) {
         if (blnFirst) {
             orderBy.append(String.format("order by %s.%s", tableId, column));

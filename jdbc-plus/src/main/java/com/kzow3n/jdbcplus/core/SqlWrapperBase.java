@@ -22,12 +22,6 @@ import java.util.stream.Collectors;
  */
 public class SqlWrapperBase {
 
-    /**
-     * 获取类的全部Field列表
-     *
-     * @param clazz clazz
-     * @return List<Field>
-     */
     protected List<Field> getAllFields(Class<?> clazz) {
         List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toList());
         addSuperClassFields(fields, clazz);
@@ -43,12 +37,6 @@ public class SqlWrapperBase {
         addSuperClassFields(fields, superClazz);
     }
 
-    /**
-     * 更新Map的Value的类型，避免映射到Bean时异常
-     *
-     * @param map map
-     * @param clazz clazz
-     */
     protected <T> void updateMap(Map<String, Object> map, Class<T> clazz) {
         List<Field> fields = getAllFields(clazz);
         Map<String, String> fieldMap = fields.stream()
