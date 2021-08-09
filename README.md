@@ -5,3 +5,15 @@
 目前仅支持Mysql</br>
 作者：kzow3n，QQ邮箱：442764882@qq.com</br>
 API站点：http://ivublazor.top:8083/
+Maven仓库地址：https://mvnrepository.com/artifact/io.github.kmp5/jdbc-plus/0.0.1
+
+基本连表查询示例：
+SqlWrapper sqlWrapper = new SqlWrapper();
+List<Student> students = sqlWrapper
+	.selectAll(1)
+	.from(Student.class, "s")
+	.InnerJoin(Teacher.class, "t")
+	.on(1, Student::getHeadmasterId, 2, Teacher::getId)
+	.eq(2, Teacher::getName, "李老师")
+	.formatSql()
+	.queryForObjects(Student.class, jdbcTemplate);
