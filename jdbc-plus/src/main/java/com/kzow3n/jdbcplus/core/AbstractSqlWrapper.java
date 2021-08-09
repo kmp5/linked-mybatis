@@ -30,6 +30,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
 
     protected List<TableInfo> tableInfos;
     protected List<TableInfo> selectAllTableInfos;
+    protected List<TableInfo> parentTableInfos;
     protected List<ColumnInfo> columnInfos;
     protected List<String> groupColumns;
     protected StringBuffer sqlBuilder;
@@ -47,6 +48,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
     protected void init() {
         tableInfos = new ArrayList<>();
         selectAllTableInfos = new ArrayList<>();
+        parentTableInfos = new ArrayList<>();
         sql = "";
         having = "";
         sqlBuilder = new StringBuffer();
@@ -88,6 +90,13 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             return null;
         }
         return tableInfos.get(tableIndex - 1);
+    }
+
+    protected TableInfo getTableInfoById(List<TableInfo> tableInfos, String tableId) {
+        if (StringUtils.isBlank(tableId)) {
+            return null;
+        }
+        return tableInfos.stream().filter(s -> s.getTableId().equals(tableId)).findFirst().orElse(null);
     }
 
     protected void addColumnInfo(Integer tableIndex, String tableColumns, String beanColumns, String columnFormat) {
@@ -337,6 +346,12 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         }
     }
 
+    protected void eq(String tableId1, String column1, String tableId2, String column2) {
+        spendOperator();
+        sqlBuilder.append(String.format("%s.%s = %s.%s ", tableId1, column1, tableId2, column2));
+    }
+
+
     protected void ne(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
         spendOperator();
         if (consumer == null) {
@@ -508,7 +523,18 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
                 this.argTypes.add(getObjectSqlType(arg));
             }
         }
-        sqlBuilder.append(String.format("EXISTS(%s) ", sql));
+        sqlBuilder.append(String.format("exists(%s) ", sql));
+    }
+
+    protected void appendExists(Consumer<SqlWrapper> consumer) {
+        spendOperator();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        sqlWrapper.setParentTableInfos(this.tableInfos);
+        consumer.accept(sqlWrapper);
+        sqlWrapper.formatSql();
+        sqlBuilder.append(String.format("exists(%s) ", sqlWrapper.getSql()));
+        this.args.addAll(sqlWrapper.getArgs());
+        argTypes.addAll(sqlWrapper.getArgTypes());
     }
 
     protected void appendNotExists(String sql, Object... args) {
@@ -519,7 +545,18 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
                 this.argTypes.add(getObjectSqlType(arg));
             }
         }
-        sqlBuilder.append(String.format("NOT EXISTS(%s) ", sql));
+        sqlBuilder.append(String.format("not exists(%s) ", sql));
+    }
+
+    protected void appendNotExists(Consumer<SqlWrapper> consumer) {
+        spendOperator();
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        sqlWrapper.setParentTableInfos(this.tableInfos);
+        consumer.accept(sqlWrapper);
+        sqlWrapper.formatSql();
+        sqlBuilder.append(String.format("not exists(%s) ", sqlWrapper.getSql()));
+        this.args.addAll(sqlWrapper.getArgs());
+        argTypes.addAll(sqlWrapper.getArgTypes());
     }
 
     @SafeVarargs

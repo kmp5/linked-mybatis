@@ -425,6 +425,27 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public <K, M> SqlWrapper eq(Integer tableIndex1, SFunction<K, ?> fn1, String tableId2, SFunction<M, ?> fn2) {
+        TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
+        String tableId1 = tableInfo1.getTableId();
+        Field field1 = ColumnUtils.getField(fn1);
+        String column1 = getColumn(tableInfo1, field1);
+        Field field2 = ColumnUtils.getField(fn2);
+        TableInfo tableInfo2 = getTableInfoById(parentTableInfos, tableId2);
+        String column2 = getColumn(tableInfo2, field2);
+        eq(tableId1, column1, tableId2, column2);
+        return this;
+    }
+
+    public <K> SqlWrapper eq(Integer tableIndex1, SFunction<K, ?> fn1, String tableId2, String column2) {
+        TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
+        String tableId1 = tableInfo1.getTableId();
+        Field field1 = ColumnUtils.getField(fn1);
+        String column1 = getColumn(tableInfo1, field1);
+        eq(tableId1, column1, tableId2, column2);
+        return this;
+    }
+
     public <K> SqlWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
@@ -870,8 +891,18 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper exists(Consumer<SqlWrapper> consumer) {
+        appendExists(consumer);
+        return this;
+    }
+
     public SqlWrapper notExists(String sql, @Nullable Object... args) {
         appendNotExists(sql, args);
+        return this;
+    }
+
+    public SqlWrapper notExists(Consumer<SqlWrapper> consumer) {
+        appendNotExists(consumer);
         return this;
     }
 
