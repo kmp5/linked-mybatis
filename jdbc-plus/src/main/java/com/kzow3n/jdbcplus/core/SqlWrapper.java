@@ -30,6 +30,11 @@ public class SqlWrapper extends AbstractSqlWrapper {
         init();
     }
 
+    public void initSql() {
+        sql = "";
+        blnFormatSql = false;
+    }
+
     //region 拼接基本Sql
 
     public SqlWrapper distinct() {
@@ -409,18 +414,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        eq(tableId, column, null, sqlWrapper);
+        eq(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper eq(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        eq(tableId, column, null, sqlWrapper);
+        eq(tableId, column, null, consumer);
         return this;
     }
 
@@ -445,18 +446,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        ne(tableId, column, null, sqlWrapper);
+        ne(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper ne(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        ne(tableId, column, null, sqlWrapper);
+        ne(tableId, column, null, consumer);
         return this;
     }
 
@@ -487,18 +484,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        gt(tableId, column, null, sqlWrapper);
+        gt(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper gt(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        gt(tableId, column, null, sqlWrapper);
+        gt(tableId, column, null, consumer);
         return this;
     }
 
@@ -529,18 +522,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        ge(tableId, column, null, sqlWrapper);
+        ge(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper ge(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        ge(tableId, column, null, sqlWrapper);
+        ge(tableId, column, null, consumer);
         return this;
     }
 
@@ -571,18 +560,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        lt(tableId, column, null, sqlWrapper);
+        lt(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper lt(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        lt(tableId, column, null, sqlWrapper);
+        lt(tableId, column, null, consumer);
         return this;
     }
 
@@ -613,18 +598,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        le(tableId, column, null, sqlWrapper);
+        le(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper le(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        le(tableId, column, null, sqlWrapper);
+        le(tableId, column, null, consumer);
         return this;
     }
 
@@ -811,18 +792,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        in(tableId, column, null, sqlWrapper);
+        in(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper in(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        in(tableId, column, null, sqlWrapper);
+        in(tableId, column, null, consumer);
         return this;
     }
 
@@ -877,18 +854,14 @@ public class SqlWrapper extends AbstractSqlWrapper {
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
         String column = getColumn(tableInfo, field);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        notIn(tableId, column, null, sqlWrapper);
+        notIn(tableId, column, null, consumer);
         return this;
     }
 
     public SqlWrapper notIn(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        notIn(tableId, column, null, sqlWrapper);
+        notIn(tableId, column, null, consumer);
         return this;
     }
 
@@ -1007,6 +980,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     //region 查询器
 
     public long queryForCount(JdbcTemplate jdbcTemplate) {
+        formatFullSql();
         String sqlCount;
         if (CollectionUtils.isEmpty(columnInfos)) {
             sqlCount = String.format(sqlBuilder.toString(), "count(*) selectCount");
@@ -1021,6 +995,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     }
 
     public <T> T queryForObject(Class<T> clazz, JdbcTemplate jdbcTemplate) {
+        formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
         int[] typeArr = Ints.toArray(argTypes);
@@ -1034,6 +1009,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     }
 
     public Map<String, Object> queryForMap(JdbcTemplate jdbcTemplate) {
+        formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
         int[] typeArr = Ints.toArray(argTypes);
@@ -1042,6 +1018,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     }
 
     public <T> List<T> queryForObjects(Class<T> clazz, JdbcTemplate jdbcTemplate) {
+        formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
         int[] typeArr = Ints.toArray(argTypes);
@@ -1054,6 +1031,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     }
 
     public List<Map<String, Object>> queryForMaps(JdbcTemplate jdbcTemplate) {
+        formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
         int[] typeArr = Ints.toArray(argTypes);
@@ -1061,6 +1039,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     }
 
     public <T> Page<T> queryForObjectPage(Class<T> clazz, JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
+        formatFullSql();
         int total = (int) queryForCount(jdbcTemplate);
         sql += orderBy.toString();
         int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
@@ -1080,6 +1059,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     }
 
     public Page<Map<String, Object>> queryForMapPage(JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
+        formatFullSql();
         int total = (int) queryForCount(jdbcTemplate);
         sql += orderBy.toString();
         int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;

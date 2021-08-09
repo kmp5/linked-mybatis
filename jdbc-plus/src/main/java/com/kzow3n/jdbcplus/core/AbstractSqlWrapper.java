@@ -36,6 +36,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
     protected StringBuffer orderBy;
     protected String sql;
     protected String having;
+    protected boolean blnFormatSql;
     protected boolean blnDistinct;
     protected boolean blnWhere;
     protected boolean blnOr;
@@ -54,6 +55,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         groupColumns = new ArrayList<>();
         this.args = new ArrayList<>();
         argTypes = new ArrayList<>();
+        blnFormatSql = false;
         blnDistinct = false;
         blnWhere = false;
         blnOr = false;
@@ -164,6 +166,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
         SqlWrapper sqlWrapper = new SqlWrapper();
         consumer.accept(sqlWrapper);
+        sqlWrapper.formatSql();
         args.addAll(sqlWrapper.getArgs());
         argTypes.addAll(sqlWrapper.getArgTypes());
         if (blnDistinct) {
@@ -192,6 +195,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
         SqlWrapper sqlWrapper = new SqlWrapper();
         consumer.accept(sqlWrapper);
+        sqlWrapper.formatSql();
         sqlBuilder.append(String.format("%s (%s) %s ", joinType, sqlWrapper.getSql(), tableId));
     }
 
@@ -200,12 +204,16 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
     }
 
     protected void formatFullSql() {
+        if (blnFormatSql) {
+            return;
+        }
+        blnFormatSql = true;
         sql = sqlBuilder.toString();
         if (!CollectionUtils.isEmpty(groupColumns)) {
             sql += String.format("group by %s ", String.join(",", groupColumns));
         }
         if (StringUtils.isNotBlank(having)) {
-            sql += String.format("HAVING %s ", having);
+            sql += String.format("having %s ", having);
         }
 
         String columnString = formatColumns();
@@ -307,9 +315,9 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sqlBuilder.append(String.format("%s.%s is not null ", tableId, column));
     }
 
-    protected void eq(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+    protected void eq(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
         spendOperator();
-        if (sqlWrapper == null) {
+        if (consumer == null) {
             if (arg != null) {
                 sqlBuilder.append(String.format("%s.%s = ? ", tableId, column));
                 args.add(arg);
@@ -320,15 +328,18 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             }
         }
         else {
+            SqlWrapper sqlWrapper = new SqlWrapper();
+            consumer.accept(sqlWrapper);
+            sqlWrapper.formatSql();
             sqlBuilder.append(String.format("%s.%s = (%s) ", tableId, column, sqlWrapper.getSql()));
             args.addAll(sqlWrapper.getArgs());
             argTypes.addAll(sqlWrapper.getArgTypes());
         }
     }
 
-    protected void ne(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
+    protected void ne(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
         spendOperator();
-        if (sqlWrapper == null) {
+        if (consumer == null) {
             if (arg != null) {
                 sqlBuilder.append(String.format("%s.%s <> ? ", tableId, column));
                 args.add(arg);
@@ -339,36 +350,42 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             }
         }
         else {
+            SqlWrapper sqlWrapper = new SqlWrapper();
+            consumer.accept(sqlWrapper);
+            sqlWrapper.formatSql();
             sqlBuilder.append(String.format("%s.%s <> (%s) ", tableId, column, sqlWrapper.getSql()));
             args.addAll(sqlWrapper.getArgs());
             argTypes.addAll(sqlWrapper.getArgTypes());
         }
     }
 
-    protected void gt(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
-        compare(tableId, column, arg, sqlWrapper, ">");
+    protected void gt(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+        compare(tableId, column, arg, consumer, ">");
     }
 
-    protected void ge(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
-        compare(tableId, column, arg, sqlWrapper, ">=");
+    protected void ge(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+        compare(tableId, column, arg, consumer, ">=");
     }
 
-    protected void lt(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
-        compare(tableId, column, arg, sqlWrapper, "<");
+    protected void lt(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+        compare(tableId, column, arg, consumer, "<");
     }
 
-    protected void le(String tableId, String column, Object arg, SqlWrapper sqlWrapper) {
-        compare(tableId, column, arg, sqlWrapper, "<=");
+    protected void le(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+        compare(tableId, column, arg, consumer, "<=");
     }
 
-    private void compare(String tableId, String column, Object arg, SqlWrapper sqlWrapper, String compareType) {
+    private void compare(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer, String compareType) {
         spendOperator();
-        if (sqlWrapper == null) {
+        if (consumer == null) {
             sqlBuilder.append(String.format("%s.%s %s ? ", tableId, column, compareType));
             args.add(arg);
             argTypes.add(getObjectSqlType(arg));
         }
         else {
+            SqlWrapper sqlWrapper = new SqlWrapper();
+            consumer.accept(sqlWrapper);
+            sqlWrapper.formatSql();
             sqlBuilder.append(String.format("%s.%s %s (%s) ", tableId, column, compareType, sqlWrapper.getSql()));
             args.addAll(sqlWrapper.getArgs());
             argTypes.addAll(sqlWrapper.getArgTypes());
@@ -439,9 +456,9 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         argTypes.add(sqlType);
     }
 
-    protected void in(String tableId, String column, List<?> args, SqlWrapper sqlWrapper) {
+    protected void in(String tableId, String column, List<?> args, Consumer<SqlWrapper> consumer) {
         spendOperator();
-        if (sqlWrapper == null) {
+        if (consumer == null) {
             this.args.addAll(args);
             int sqlType = getObjectSqlType(args.get(0));
             List<String> params = new ArrayList<>();
@@ -452,15 +469,18 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, String.join(",", params)));
         }
         else {
+            SqlWrapper sqlWrapper = new SqlWrapper();
+            consumer.accept(sqlWrapper);
+            sqlWrapper.formatSql();
             sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, sqlWrapper.getSql()));
             this.args.addAll(sqlWrapper.getArgs());
             argTypes.addAll(sqlWrapper.getArgTypes());
         }
     }
 
-    protected void notIn(String tableId, String column, List<?> args, SqlWrapper sqlWrapper) {
+    protected void notIn(String tableId, String column, List<?> args, Consumer<SqlWrapper> consumer) {
         spendOperator();
-        if (sqlWrapper == null) {
+        if (consumer == null) {
             this.args.addAll(args);
             int sqlType = getObjectSqlType(args.get(0));
             List<String> params = new ArrayList<>();
@@ -471,6 +491,9 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, String.join(",", params)));
         }
         else {
+            SqlWrapper sqlWrapper = new SqlWrapper();
+            consumer.accept(sqlWrapper);
+            sqlWrapper.formatSql();
             sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, sqlWrapper.getSql()));
             this.args.addAll(sqlWrapper.getArgs());
             argTypes.addAll(sqlWrapper.getArgTypes());
