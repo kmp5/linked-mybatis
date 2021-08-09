@@ -296,6 +296,33 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public final <K, M> SqlWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        Field field1 = ColumnUtils.getField(fn1);
+        Field field2 = ColumnUtils.getField(fn2);
+        addColumnInfoByFields(tableInfo, field1, true, field2, "group_concat(%s)");
+        return this;
+    }
+
+    public final <K> SqlWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        Field field1 = ColumnUtils.getField(fn1);
+        addColumnInfoByField(tableInfo, field1, true, beanColumn, "group_concat(%s)");
+        return this;
+    }
+
+    public final <M> SqlWrapper groupConcat(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+        Field field2 = ColumnUtils.getField(fn2);
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, tableColumn, beanColumn, "group_concat(%s)");
+        return this;
+    }
+
+    public SqlWrapper groupConcat(Integer tableIndex, String tableColumn, String beanColumn) {
+        addColumnInfo(tableIndex, tableColumn, beanColumn, "group_concat(%s)");
+        return this;
+    }
+
     public SqlWrapper formatSql() {
         formatFullSql();
         return this;
