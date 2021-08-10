@@ -608,6 +608,15 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         having = sql;
     }
 
+    protected void appendHaving(Consumer<SqlWrapper> consumer) {
+        SqlWrapper sqlWrapper = new SqlWrapper();
+        sqlWrapper.setTableInfos(this.tableInfos);
+        consumer.accept(sqlWrapper);
+        sqlWrapper.formatSql();
+        String having = sqlWrapper.getSql();
+        this.having = having.replaceFirst("where", "having");
+    }
+
     protected void orderBy(String tableId, String column, boolean blnFirst, boolean blnDesc) {
         if (blnFirst) {
             orderBy.append(String.format("order by %s.%s", tableId, column));

@@ -3,6 +3,7 @@ package com.kzow3n.jdbcplus.core;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.common.primitives.Ints;
+import com.kzow3n.jdbcplus.core.condition.AggregateWrapper;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -190,6 +191,33 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     public SqlWrapper count(String beanColumn) {
         addColumnInfo(null, "count(*)", beanColumn, null);
+        return this;
+    }
+
+    public final <K, M> SqlWrapper count(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        Field field1 = ColumnUtils.getField(fn1);
+        Field field2 = ColumnUtils.getField(fn2);
+        addColumnInfoByFields(tableInfo, field1, true, field2, "count(%s)");
+        return this;
+    }
+
+    public final <K> SqlWrapper count(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        Field field1 = ColumnUtils.getField(fn1);
+        addColumnInfoByField(tableInfo, field1, true, beanColumn, "count(%s)");
+        return this;
+    }
+
+    public final <M> SqlWrapper count(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+        Field field2 = ColumnUtils.getField(fn2);
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, tableColumn, beanColumn, "count(%s)");
+        return this;
+    }
+
+    public SqlWrapper count(Integer tableIndex, String tableColumn, String beanColumn) {
+        addColumnInfo(tableIndex, tableColumn, beanColumn, "count(%s)");
         return this;
     }
 
@@ -409,6 +437,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        eq(tableId, column, arg, null);
+        return this;
+    }
+
     public <K> SqlWrapper eq(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
@@ -422,6 +461,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         eq(tableId, column, null, consumer);
+        return this;
+    }
+
+    public SqlWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        eq(tableId, column, null, consumer2);
         return this;
     }
 
@@ -462,6 +512,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        ne(tableId, column, arg, null);
+        return this;
+    }
+
     public <K> SqlWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
@@ -475,6 +536,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         ne(tableId, column, null, consumer);
+        return this;
+    }
+
+    public SqlWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        ne(tableId, column, null, consumer2);
         return this;
     }
 
@@ -500,6 +572,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        gt(tableId, column, arg, null);
+        return this;
+    }
+
     public <K> SqlWrapper gt(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
@@ -513,6 +596,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         gt(tableId, column, null, consumer);
+        return this;
+    }
+
+    public SqlWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        gt(tableId, column, null, consumer2);
         return this;
     }
 
@@ -538,6 +632,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        ge(tableId, column, arg, null);
+        return this;
+    }
+
     public <K> SqlWrapper ge(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
@@ -551,6 +656,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         ge(tableId, column, null, consumer);
+        return this;
+    }
+
+    public SqlWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        ge(tableId, column, null, consumer2);
         return this;
     }
 
@@ -576,6 +692,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        lt(tableId, column, arg, null);
+        return this;
+    }
+
     public <K> SqlWrapper lt(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
@@ -589,6 +716,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         lt(tableId, column, null, consumer);
+        return this;
+    }
+
+    public SqlWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        lt(tableId, column, null, consumer2);
         return this;
     }
 
@@ -614,6 +752,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        le(tableId, column, arg, null);
+        return this;
+    }
+
     public <K> SqlWrapper le(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
@@ -627,6 +776,17 @@ public class SqlWrapper extends AbstractSqlWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         le(tableId, column, null, consumer);
+        return this;
+    }
+
+    public SqlWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        le(tableId, column, null, consumer2);
         return this;
     }
 
@@ -740,6 +900,20 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
+    public SqlWrapper between(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg1, Object arg2) {
+        if (arg1 == null || arg2 == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
+        between(tableId, column, arg1, arg2);
+        return this;
+    }
+
     public <K> SqlWrapper notBetween(Integer tableIndex, SFunction<K, ?> fn, Object arg1, Object arg2) {
         if (arg1 == null || arg2 == null) {
             return this;
@@ -758,6 +932,20 @@ public class SqlWrapper extends AbstractSqlWrapper {
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
+        notBetween(tableId, column, arg1, arg2);
+        return this;
+    }
+
+    public SqlWrapper notBetween(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg1, Object arg2) {
+        if (arg1 == null || arg2 == null) {
+            return this;
+        }
+        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+        String tableId = tableInfo.getTableId();
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        consumer.accept(aggregateWrapper);
+        String column = aggregateWrapper.getColumn();
         notBetween(tableId, column, arg1, arg2);
         return this;
     }
@@ -939,6 +1127,11 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     public SqlWrapper having(String sql, @Nullable Object... args) {
         appendHaving(sql, args);
+        return this;
+    }
+
+    public SqlWrapper having(Consumer<SqlWrapper> consumer) {
+        appendHaving(consumer);
         return this;
     }
 
