@@ -10,7 +10,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -122,48 +121,6 @@ public class SqlWrapperBase {
 
     protected String getBeanColumnByField(Field field) {
         return field.getName();
-    }
-
-    protected int getObjectSqlType(Object object) {
-        int type;
-        String className = object.getClass().getName();
-        switch (className) {
-            default:
-                type = Types.NULL;
-                break;
-            case "java.lang.Integer":
-                type = Types.INTEGER;
-                break;
-            case "java.lang.Long":
-                type = Types.BIGINT;
-                break;
-            case "java.lang.Float":
-                type = Types.REAL;
-                break;
-            case "java.math.Double":
-                type = Types.DOUBLE;
-                break;
-            case "java.lang.String":
-                type = Types.NVARCHAR;
-                break;
-            case "java.math.BigDecimal":
-                type = Types.DECIMAL;
-                break;
-            case "java.util.Date":
-            case "java.time.LocalDateTime":
-                type = Types.TIMESTAMP;
-                break;
-            case "java.time.LocalDate":
-                type = Types.DATE;
-                break;
-            case "java.time.LocalTime":
-                type = Types.TIME;
-                break;
-            case "java.lang.Boolean":
-                type = Types.BIT;
-                break;
-        }
-        return type;
     }
 
     protected static <T> List<T> mapsToBeans(List<? extends Map<String, ?>> maps, Class<T> clazz) {

@@ -6,7 +6,7 @@
 
     <groupId>io.github.kmp5</groupId>
     <artifactId>jdbc-plus</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -49,7 +49,6 @@
         <mybatis-plus.version>3.4.0</mybatis-plus.version>
         <lombok.version>1.18.16</lombok.version>
         <commons-lang3.version>3.8.1</commons-lang3.version>
-        <guava.version>30.1.1-jre</guava.version>
     </properties>
 
     <dependencies>
@@ -63,12 +62,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
 
         <dependency>

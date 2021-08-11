@@ -2,17 +2,18 @@ package com.kzow3n.jdbcplus.core;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.google.common.primitives.Ints;
 import com.kzow3n.jdbcplus.core.condition.AggregateWrapper;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.apache.ibatis.jdbc.SqlRunner;
+import org.apache.ibatis.session.SqlSession;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -1203,7 +1204,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     //region 查询器
 
-    public long queryForCount(JdbcTemplate jdbcTemplate) {
+    public long queryForCount(SqlSession sqlSession) {
         formatFullSql();
         String sqlCount;
         if (CollectionUtils.isEmpty(columnInfos)) {
@@ -1213,17 +1214,31 @@ public class SqlWrapper extends AbstractSqlWrapper {
             sqlCount = String.format("select count(*) selectCount from (%s) t", sql);
         }
         log.info(sqlCount);
-        int[] typeArr = Ints.toArray(argTypes);
-        Map<String, Object> map = jdbcTemplate.queryForMap(sqlCount, args.toArray(), typeArr);
-        return (long) map.get("selectCount");
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        Map<String, Object> map;
+        try {
+            map = sqlRunner.selectOne(sqlCount, args);
+            return (long) map.get("selectCount");
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
+        return 0;
     }
 
-    public <T> T queryForObject(Class<T> clazz, JdbcTemplate jdbcTemplate) {
+    public <T> T queryForObject(Class<T> clazz, SqlSession sqlSession) {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        int[] typeArr = Ints.toArray(argTypes);
-        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        List<Map<String, Object>> mapList = null;
+        try {
+            mapList = sqlRunner.selectAll(sql, args);
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
+        }
         Map<String, Object> map = mapList.stream().findFirst().orElse(null);
         if (map == null) {
             return null;
@@ -1232,21 +1247,34 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return mapToBean(map, clazz);
     }
 
-    public Map<String, Object> queryForMap(JdbcTemplate jdbcTemplate) {
+    public Map<String, Object> queryForMap(SqlSession sqlSession) {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        int[] typeArr = Ints.toArray(argTypes);
-        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        List<Map<String, Object>> mapList = null;
+        try {
+            mapList = sqlRunner.selectAll(sql, args);
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
+        }
         return mapList.stream().findFirst().orElse(null);
     }
 
-    public <T> List<T> queryForObjects(Class<T> clazz, JdbcTemplate jdbcTemplate) {
+    public <T> List<T> queryForObjects(Class<T> clazz, SqlSession sqlSession) {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        int[] typeArr = Ints.toArray(argTypes);
-        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        List<Map<String, Object>> mapList = null;
+        try {
+            mapList = sqlRunner.selectAll(sql, args);
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
@@ -1254,25 +1282,36 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return mapsToBeans(mapList, clazz);
     }
 
-    public List<Map<String, Object>> queryForMaps(JdbcTemplate jdbcTemplate) {
+    public List<Map<String, Object>> queryForMaps(SqlSession sqlSession) {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        int[] typeArr = Ints.toArray(argTypes);
-        return jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        List<Map<String, Object>> mapList = null;
+        try {
+            mapList = sqlRunner.selectAll(sql, args);
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
+        return mapList;
     }
 
-    public <T> Page<T> queryForObjectPage(Class<T> clazz, JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
+    public <T> Page<T> queryForObjectPage(Class<T> clazz, SqlSession sqlSession, int pageIndex, int pageSize) {
         formatFullSql();
-        int total = (int) queryForCount(jdbcTemplate);
+        int total = (int) queryForCount(sqlSession);
         sql += orderBy.toString();
         int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
         Page<T> page = new Page<>();
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
         sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
         log.info(sql);
-        int[] typeArr = Ints.toArray(argTypes);
-        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        List<Map<String, Object>> mapList = null;
+        try {
+            mapList = sqlRunner.selectAll(sql, args);
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
         if (CollectionUtils.isEmpty(mapList)) {
             return page;
         }
@@ -1282,17 +1321,22 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return page;
     }
 
-    public Page<Map<String, Object>> queryForMapPage(JdbcTemplate jdbcTemplate, int pageIndex, int pageSize) {
+    public Page<Map<String, Object>> queryForMapPage(SqlSession sqlSession, int pageIndex, int pageSize) {
         formatFullSql();
-        int total = (int) queryForCount(jdbcTemplate);
+        int total = (int) queryForCount(sqlSession);
         sql += orderBy.toString();
         int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
         Page<Map<String, Object>> page = new Page<>();
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
         sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
         log.info(sql);
-        int[] typeArr = Ints.toArray(argTypes);
-        List<Map<String, Object>> mapList = jdbcTemplate.queryForList(sql, args.toArray(), typeArr);
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        List<Map<String, Object>> mapList = null;
+        try {
+            mapList = sqlRunner.selectAll(sql, args);
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
         page.setRecords(mapList);
         return page;
     }
