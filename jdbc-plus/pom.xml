@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.kmp5</groupId>
-    <artifactId>jdbc-plus</artifactId>
+    <artifactId>sqlrunner-plus</artifactId>
     <version>0.0.3</version>
     <packaging>jar</packaging>
 
