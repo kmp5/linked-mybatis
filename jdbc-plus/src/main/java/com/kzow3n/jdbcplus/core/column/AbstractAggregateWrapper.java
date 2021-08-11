@@ -1,4 +1,4 @@
-package com.kzow3n.jdbcplus.core.condition;
+package com.kzow3n.jdbcplus.core.column;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;

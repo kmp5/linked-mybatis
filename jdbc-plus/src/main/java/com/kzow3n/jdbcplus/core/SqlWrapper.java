@@ -2,7 +2,7 @@ package com.kzow3n.jdbcplus.core;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.kzow3n.jdbcplus.core.condition.AggregateWrapper;
+import com.kzow3n.jdbcplus.core.column.AggregateWrapper;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.extern.slf4j.Slf4j;
