@@ -6,14 +6,19 @@ import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.jdbc.SqlRunner;
+import org.apache.ibatis.session.SqlSession;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -25,6 +30,7 @@ import java.util.stream.Collectors;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Slf4j
 public class AbstractSqlWrapper extends SqlWrapperBase {
 
     protected List<TableInfo> tableInfos;
@@ -580,5 +586,16 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         if (blnDesc) {
             orderBy.append(" desc");
         }
+    }
+
+    protected List<Map<String, Object>> selectList(SqlSession sqlSession) {
+        List<Map<String, Object>> mapList = null;
+        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        try {
+            mapList = sqlRunner.selectAll(sql, args.toArray());
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
+        return mapList;
     }
 }

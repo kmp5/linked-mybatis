@@ -1206,18 +1206,12 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     public long queryForCount(SqlSession sqlSession) {
         formatFullSql();
-        String sqlCount;
-        if (CollectionUtils.isEmpty(columnInfos)) {
-            sqlCount = String.format(sqlBuilder.toString(), "count(*) selectCount");
-        }
-        else {
-            sqlCount = String.format("select count(*) selectCount from (%s) t", sql);
-        }
+        String sqlCount = String.format(sqlBuilder.toString(), "count(*) selectCount");
         log.info(sqlCount);
         SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
         Map<String, Object> map;
         try {
-            map = sqlRunner.selectOne(sqlCount, args);
+            map = sqlRunner.selectOne(sqlCount, args.toArray());
             return (long) map.get("selectCount");
         } catch (SQLException sqlException) {
             log.error(sqlException.getMessage());
@@ -1229,13 +1223,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args);
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
+        List<Map<String, Object>> mapList = selectList(sqlSession);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
@@ -1251,13 +1239,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args);
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
+        List<Map<String, Object>> mapList = selectList(sqlSession);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
@@ -1268,13 +1250,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args);
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
+        List<Map<String, Object>> mapList = selectList(sqlSession);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
@@ -1286,14 +1262,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args);
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
-        return mapList;
+        return selectList(sqlSession);
     }
 
     public <T> Page<T> queryForObjectPage(Class<T> clazz, SqlSession sqlSession, int pageIndex, int pageSize) {
@@ -1305,13 +1274,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
         sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
         log.info(sql);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args);
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
+        List<Map<String, Object>> mapList = selectList(sqlSession);
         if (CollectionUtils.isEmpty(mapList)) {
             return page;
         }
@@ -1330,17 +1293,10 @@ public class SqlWrapper extends AbstractSqlWrapper {
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
         sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
         log.info(sql);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args);
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
+        List<Map<String, Object>> mapList = selectList(sqlSession);
         page.setRecords(mapList);
         return page;
     }
 
     //endregion
-
 }
