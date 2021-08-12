@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.ClassUtils;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cglib.beans.BeanMap;
 import org.springframework.util.CollectionUtils;
 
@@ -123,13 +124,37 @@ public class SqlWrapperBase {
         return field.getName();
     }
 
-    protected static <T> List<T> mapsToBeans(List<? extends Map<String, ?>> maps, Class<T> clazz) {
+    protected <T> List<T> mapsToBeans(List<? extends Map<String, ?>> maps, Class<T> clazz) {
         return CollectionUtils.isEmpty(maps) ? Collections.emptyList() : maps.stream().map((e) -> mapToBean(e, clazz)).collect(Collectors.toList());
     }
 
-    protected static <T> T mapToBean(Map<String, ?> map, Class<T> clazz) {
+    protected <T> T mapToBean(Map<String, ?> map, Class<T> clazz) {
         T bean = ClassUtils.newInstance(clazz);
         BeanMap.create(bean).putAll(map);
         return bean;
+    }
+
+    protected void updateMapsKeys(List<Map<String, Object>> mapList, Class<?> clazz) {
+        List<Field> fields = getAllFields(clazz);
+        for (Field field : fields) {
+            String tableColumn = getTableColumnByField(field);
+            if (StringUtils.isNotBlank(tableColumn)) {
+                String beanColumn = field.getName();
+                mapList.forEach(map -> {
+                    map.put(beanColumn, map.remove(tableColumn));
+                });
+            }
+        }
+    }
+
+    protected void updateMapKeys(Map<String, Object> map, Class<?> clazz) {
+        List<Field> fields = getAllFields(clazz);
+        for (Field field : fields) {
+            String tableColumn = getTableColumnByField(field);
+            if (StringUtils.isNotBlank(tableColumn)) {
+                String beanColumn = field.getName();
+                map.put(beanColumn, map.remove(tableColumn));
+            }
+        }
     }
 }

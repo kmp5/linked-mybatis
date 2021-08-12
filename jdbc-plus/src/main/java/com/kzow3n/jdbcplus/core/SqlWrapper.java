@@ -5,15 +5,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kzow3n.jdbcplus.core.column.AggregateWrapper;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.jdbc.SqlRunner;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +22,6 @@ import java.util.function.Consumer;
  * @author owen
  * @since 2021/8/4
  */
-@Slf4j
 public class SqlWrapper extends AbstractSqlWrapper {
 
     public SqlWrapper() {
@@ -1205,24 +1201,31 @@ public class SqlWrapper extends AbstractSqlWrapper {
     //region 查询器
 
     public long queryForCount(SqlSession sqlSession) {
-        formatFullSql();
-        String sqlCount = String.format(sqlBuilder.toString(), "count(*) selectCount");
-        log.info(sqlCount);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
-        Map<String, Object> map;
-        try {
-            map = sqlRunner.selectOne(sqlCount, args.toArray());
-            return (long) map.get("selectCount");
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
+        return selectCount(sqlSession);
+    }
+
+    public List<Map<String, Object>> queryForMaps(SqlSession sqlSession) {
+        return selectList(sqlSession);
+    }
+
+    public Map<String, Object> queryForMap(SqlSession sqlSession) {
+        List<Map<String, Object>> mapList = selectList(sqlSession);
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
         }
-        return 0;
+        return mapList.stream().findFirst().orElse(null);
+    }
+
+    public <T> List<T> queryForObjects(Class<T> clazz, SqlSession sqlSession) {
+        List<Map<String, Object>> mapList = selectList(sqlSession);
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
+        }
+        updateMapList(mapList, clazz);
+        return mapsToBeans(mapList, clazz);
     }
 
     public <T> T queryForObject(Class<T> clazz, SqlSession sqlSession) {
-        formatFullSql();
-        sql += orderBy.toString();
-        log.info(sql);
         List<Map<String, Object>> mapList = selectList(sqlSession);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
@@ -1235,46 +1238,16 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return mapToBean(map, clazz);
     }
 
-    public Map<String, Object> queryForMap(SqlSession sqlSession) {
-        formatFullSql();
-        sql += orderBy.toString();
-        log.info(sql);
-        List<Map<String, Object>> mapList = selectList(sqlSession);
-        if (CollectionUtils.isEmpty(mapList)) {
-            return null;
-        }
-        return mapList.stream().findFirst().orElse(null);
-    }
-
-    public <T> List<T> queryForObjects(Class<T> clazz, SqlSession sqlSession) {
-        formatFullSql();
-        sql += orderBy.toString();
-        log.info(sql);
-        List<Map<String, Object>> mapList = selectList(sqlSession);
-        if (CollectionUtils.isEmpty(mapList)) {
-            return null;
-        }
-        updateMapList(mapList, clazz);
-        return mapsToBeans(mapList, clazz);
-    }
-
-    public List<Map<String, Object>> queryForMaps(SqlSession sqlSession) {
-        formatFullSql();
-        sql += orderBy.toString();
-        log.info(sql);
-        return selectList(sqlSession);
+    public Page<Map<String, Object>> queryForMapPage(SqlSession sqlSession, int pageIndex, int pageSize) {
+        Page<Map<String, Object>> page = new Page<>();
+        List<Map<String, Object>> mapList = selectPage(sqlSession, page, pageIndex, pageSize);
+        page.setRecords(mapList);
+        return page;
     }
 
     public <T> Page<T> queryForObjectPage(Class<T> clazz, SqlSession sqlSession, int pageIndex, int pageSize) {
-        formatFullSql();
-        int total = (int) queryForCount(sqlSession);
-        sql += orderBy.toString();
-        int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
         Page<T> page = new Page<>();
-        page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
-        sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
-        log.info(sql);
-        List<Map<String, Object>> mapList = selectList(sqlSession);
+        List<Map<String, Object>> mapList = selectPage(sqlSession, page, pageIndex, pageSize);
         if (CollectionUtils.isEmpty(mapList)) {
             return page;
         }
@@ -1284,18 +1257,40 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return page;
     }
 
-    public Page<Map<String, Object>> queryForMapPage(SqlSession sqlSession, int pageIndex, int pageSize) {
-        formatFullSql();
-        int total = (int) queryForCount(sqlSession);
-        sql += orderBy.toString();
-        int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
-        Page<Map<String, Object>> page = new Page<>();
-        page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
-        sql += String.format(" LIMIT %d,%d", (pageIndex - 1) * pageSize, pageSize);
-        log.info(sql);
-        List<Map<String, Object>> mapList = selectList(sqlSession);
-        page.setRecords(mapList);
-        return page;
+    public List<Map<String, Object>> execProForMaps(SqlSession sqlSession, String proName, @Nullable Object... args) {
+        return execPro(sqlSession, proName, args);
+    }
+
+    public Map<String, Object> execProForMap(SqlSession sqlSession, String proName, @Nullable Object... args) {
+        List<Map<String, Object>> mapList = execPro(sqlSession, proName, args);
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
+        }
+        return mapList.stream().findFirst().orElse(null);
+    }
+
+    public <T> List<T> execProForObjects(Class<T> clazz, SqlSession sqlSession, String proName, @Nullable Object... args) {
+        List<Map<String, Object>> mapList = execPro(sqlSession, proName, args);
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
+        }
+        updateMapsKeys(mapList, clazz);
+        updateMapList(mapList, clazz);
+        return mapsToBeans(mapList, clazz);
+    }
+
+    public <T> T execProForObject(Class<T> clazz, SqlSession sqlSession, String proName, @Nullable Object... args) {
+        List<Map<String, Object>> mapList = execPro(sqlSession, proName, args);
+        if (CollectionUtils.isEmpty(mapList)) {
+            return null;
+        }
+        Map<String, Object> map = mapList.stream().findFirst().orElse(null);
+        if (map == null) {
+            return null;
+        }
+        updateMapKeys(map, clazz);
+        updateMap(map, clazz);
+        return mapToBean(map, clazz);
     }
 
     //endregion
