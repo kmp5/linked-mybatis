@@ -2,6 +2,7 @@ package com.kzow3n.jdbcplus.core;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
 import com.kzow3n.jdbcplus.pojo.ColumnInfo;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
@@ -9,7 +10,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.jdbc.SqlRunner;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.util.CollectionUtils;
 
@@ -591,9 +591,9 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
 
     protected long selectCount(SqlSession sqlSession) {
         formatFullSql();
-        String sqlCount = String.format(sqlBuilder.toString(), "count(*) selectCount");
+        String sqlCount = String.format(sqlBuilder.toString(), "count(1) selectCount");
         log.info(sqlCount);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         Map<String, Object> map;
         try {
             map = sqlRunner.selectOne(sqlCount, args.toArray());
@@ -608,7 +608,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         formatFullSql();
         sql += orderBy.toString();
         log.info(sql);
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         List<Map<String, Object>> mapList = null;
         try {
             mapList = sqlRunner.selectAll(sql, args.toArray());
@@ -627,7 +627,14 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sql += orderBy.toString();
         sql += String.format(" limit %d,%d", (pageIndex - 1) * pageSize, pageSize);
         log.info(sql);
-        return selectList(sqlSession);
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
+        List<Map<String, Object>> mapList = null;
+        try {
+            mapList = sqlRunner.selectAll(sql, args.toArray());
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
+        return mapList;
     }
 
     protected List<Map<String, Object>> execPro(SqlSession sqlSession, String proName, Object... args) {
@@ -643,7 +650,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sql = sqlBuilder.toString();
         log.info(sql);
         List<Map<String, Object>> mapList = null;
-        SqlRunner sqlRunner = new SqlRunner(sqlSession.getConnection());
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         try {
             mapList = sqlRunner.selectAll(sql, args);
         } catch (SQLException sqlException) {
