@@ -1,8 +1,6 @@
 package com.kzow3n.jdbcplus.core;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
 import com.kzow3n.jdbcplus.pojo.ColumnInfo;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
@@ -10,16 +8,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.session.SqlSession;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -587,75 +582,5 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         if (blnDesc) {
             orderBy.append(" desc");
         }
-    }
-
-    protected long selectCount(SqlSession sqlSession) {
-        formatFullSql();
-        String sqlCount = String.format(sqlBuilder.toString(), "count(1) selectCount");
-        log.info(sqlCount);
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
-        Map<String, Object> map;
-        try {
-            map = sqlRunner.selectOne(sqlCount, args.toArray());
-            return (long) map.get("selectCount");
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
-        return 0;
-    }
-
-    protected List<Map<String, Object>> selectList(SqlSession sqlSession) {
-        formatFullSql();
-        sql += orderBy.toString();
-        log.info(sql);
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args.toArray());
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
-        return mapList;
-    }
-
-    protected <T> List<Map<String, Object>> selectPage(SqlSession sqlSession, Page<T> page, int pageIndex, int pageSize) {
-        int total = (int) selectCount(sqlSession);
-        int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
-        page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
-
-        formatFullSql();
-        sql += orderBy.toString();
-        sql += String.format(" limit %d,%d", (pageIndex - 1) * pageSize, pageSize);
-        log.info(sql);
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
-        List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, args.toArray());
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
-        return mapList;
-    }
-
-    protected List<Map<String, Object>> execPro(SqlSession sqlSession, String proName, Object... args) {
-        init();
-        sqlBuilder.append(String.format("call %s", proName));
-        if (args != null) {
-            List<String> formats = new ArrayList<>();
-            for (int i = 0;i < args.length;i ++) {
-                formats.add("?");
-            }
-            sqlBuilder.append(String.format("(%s)", String.join(",", formats)));
-        }
-        sql = sqlBuilder.toString();
-        log.info(sql);
-        List<Map<String, Object>> mapList = null;
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
-        try {
-            mapList = sqlRunner.selectAll(sql, args);
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
-        }
-        return mapList;
     }
 }
