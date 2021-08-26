@@ -8,6 +8,7 @@ import org.springframework.cglib.beans.BeanMap;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +33,17 @@ public class QueryBuilderBase {
             Object obj = entry.getValue();
             if (obj == null) {
                 continue;
+            }
+            //处理java.lang.Double
+            if (obj instanceof Double) {
+                String className = fieldMap.get(key);
+                switch (className) {
+                    default:
+                        break;
+                    case "java.math.BigDecimal":
+                        entry.setValue(BigDecimal.valueOf((double) obj));
+                        break;
+                }
             }
             //java.sql.Timestamp格式特殊处理
             if (obj instanceof Timestamp) {

@@ -35,30 +35,31 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
         checkBuilderValid();
         sqlWrapper.formatSql();
         String sqlCount = String.format(sqlWrapper.getSqlBuilder().toString(), "count(1) selectCount");
-        log.info(sqlCount);
         List<Object> args = sqlWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         Map<String, Object> map;
-        long count = 0;
+        long count = 0L;
         if (cacheable) {
             String cacheKey = getCacheKey(sqlCount, args);
             if (redisTemplate.hasKey(cacheKey)) {
                 log.info("get cache from redis.");
-                return (long)redisTemplate.opsForValue().get(cacheKey);
+                return Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(cacheKey)).toString());
             }
+            log.info(sqlCount);
             try {
                 map = sqlRunner.selectOne(sqlCount, args.toArray());
-                count = (long) map.get("selectCount");
+                count = Long.parseLong(map.get("selectCount").toString());
                 redisTemplate.opsForValue().set(cacheKey, count, timeout, TimeUnit.SECONDS);
-                log.info("cacheKey:{0}", cacheKey);
+                log.info(String.format("cacheKey:%s", cacheKey));
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
         }
         else {
+            log.info(sqlCount);
             try {
                 map = sqlRunner.selectOne(sqlCount, args.toArray());
-                count = (long) map.get("selectCount");
+                count = Long.parseLong(map.get("selectCount").toString());
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
@@ -70,7 +71,6 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
         checkBuilderValid();
         sqlWrapper.formatSql();
         String sql = sqlWrapper.getSql() + sqlWrapper.getOrderBy().toString();
-        log.info(sql);
         List<Object> args = sqlWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         List<Map<String, Object>> mapList = null;
@@ -80,15 +80,17 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
                 log.info("get cache from redis.");
                 return (List<Map<String, Object>>)redisTemplate.opsForValue().get(cacheKey);
             }
+            log.info(sql);
             try {
                 mapList = sqlRunner.selectAll(sql, args.toArray());
                 redisTemplate.opsForValue().set(cacheKey, mapList, timeout, TimeUnit.SECONDS);
-                log.info("cacheKey:{0}", cacheKey);
+                log.info(String.format("cacheKey:%s", cacheKey));
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
         }
         else {
+            log.info(sql);
             try {
                 mapList = sqlRunner.selectAll(sql, args.toArray());
             } catch (SQLException sqlException) {
@@ -98,16 +100,15 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
         return mapList;
     }
 
-    protected <T> List<Map<String, Object>> selectPage(SqlWrapper sqlWrapper, Page<T> page, int pageIndex, int pageSize) {
+    protected <T> List<Map<String, Object>> selectPage(SqlWrapper sqlWrapper, Page<T> page, long pageIndex, long pageSize) {
         checkBuilderValid();
-        int total = (int) selectCount(sqlWrapper);
-        int pages = total % pageSize > 0 ? (total / pageSize) + 1 : total / pageSize;
+        long total = selectCount(sqlWrapper);
+        long pages = total % pageSize > 0 ? (total / pageSize) + 1L : total / pageSize;
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
 
         sqlWrapper.formatSql();
         String sql = sqlWrapper.getSql() + sqlWrapper.getOrderBy().toString();
-        sql += String.format(" limit %d,%d", (pageIndex - 1) * pageSize, pageSize);
-        log.info(sql);
+        sql += String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
         List<Object> args = sqlWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         List<Map<String, Object>> mapList = null;
@@ -117,15 +118,17 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
                 log.info("get cache from redis.");
                 return (List<Map<String, Object>>)redisTemplate.opsForValue().get(cacheKey);
             }
+            log.info(sql);
             try {
                 mapList = sqlRunner.selectAll(sql, args.toArray());
                 redisTemplate.opsForValue().set(cacheKey, mapList, timeout, TimeUnit.SECONDS);
-                log.info("cacheKey:{0}", cacheKey);
+                log.info(String.format("cacheKey:%s", cacheKey));
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
         }
         else {
+            log.info(sql);
             try {
                 mapList = sqlRunner.selectAll(sql, args.toArray());
             } catch (SQLException sqlException) {
