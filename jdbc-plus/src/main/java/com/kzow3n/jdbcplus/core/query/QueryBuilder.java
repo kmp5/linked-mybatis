@@ -18,35 +18,33 @@ import java.util.Map;
  */
 public class QueryBuilder extends AbstractQueryBuilder {
 
-    public QueryBuilder(SqlSession sqlSession, SqlWrapper sqlWrapper) {
-        this.sqlWrapper = sqlWrapper;
+    public QueryBuilder(SqlSession sqlSession) {
         this.sqlSession = sqlSession;
     }
 
-    public QueryBuilder(SqlSession sqlSession, SqlWrapper sqlWrapper, RedisTemplate<String, Object> redisTemplate) {
-        this.sqlWrapper = sqlWrapper;
+    public QueryBuilder(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate) {
         this.sqlSession = sqlSession;
         this.redisTemplate = redisTemplate;
     }
 
-    public long forCount() {
-        return selectCount();
+    public long forCount(SqlWrapper sqlWrapper) {
+        return selectCount(sqlWrapper);
     }
 
-    public List<Map<String, Object>> forMaps() {
-        return selectList();
+    public List<Map<String, Object>> forMaps(SqlWrapper sqlWrapper) {
+        return selectList(sqlWrapper);
     }
 
-    public Map<String, Object> forMap() {
-        List<Map<String, Object>> mapList = selectList();
+    public Map<String, Object> forMap(SqlWrapper sqlWrapper) {
+        List<Map<String, Object>> mapList = selectList(sqlWrapper);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
         return mapList.stream().findFirst().orElse(null);
     }
 
-    public <T> List<T> forObjects(Class<T> clazz) {
-        List<Map<String, Object>> mapList = selectList();
+    public <T> List<T> forObjects(Class<T> clazz, SqlWrapper sqlWrapper) {
+        List<Map<String, Object>> mapList = selectList(sqlWrapper);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
@@ -54,8 +52,8 @@ public class QueryBuilder extends AbstractQueryBuilder {
         return mapsToBeans(mapList, clazz);
     }
 
-    public <T> T forObject(Class<T> clazz) {
-        List<Map<String, Object>> mapList = selectList();
+    public <T> T forObject(Class<T> clazz, SqlWrapper sqlWrapper) {
+        List<Map<String, Object>> mapList = selectList(sqlWrapper);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
@@ -67,16 +65,16 @@ public class QueryBuilder extends AbstractQueryBuilder {
         return mapToBean(map, clazz);
     }
 
-    public Page<Map<String, Object>> forMapPage(int pageIndex, int pageSize) {
+    public Page<Map<String, Object>> forMapPage(SqlWrapper sqlWrapper, int pageIndex, int pageSize) {
         Page<Map<String, Object>> page = new Page<>();
-        List<Map<String, Object>> mapList = selectPage(page, pageIndex, pageSize);
+        List<Map<String, Object>> mapList = selectPage(sqlWrapper, page, pageIndex, pageSize);
         page.setRecords(mapList);
         return page;
     }
 
-    public <T> Page<T> forObjectPage(Class<T> clazz, int pageIndex, int pageSize) {
+    public <T> Page<T> forObjectPage(Class<T> clazz, SqlWrapper sqlWrapper, int pageIndex, int pageSize) {
         Page<T> page = new Page<>();
-        List<Map<String, Object>> mapList = selectPage(page, pageIndex, pageSize);
+        List<Map<String, Object>> mapList = selectPage(sqlWrapper, page, pageIndex, pageSize);
         if (CollectionUtils.isEmpty(mapList)) {
             return page;
         }
