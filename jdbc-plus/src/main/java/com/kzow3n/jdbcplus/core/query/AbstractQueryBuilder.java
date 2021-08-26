@@ -1,8 +1,10 @@
 package com.kzow3n.jdbcplus.core.query;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kzow3n.jdbcplus.core.SqlWrapper;
 import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
+import com.kzow3n.jdbcplus.pojo.SqlArg;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 查询器基本方法类
@@ -26,21 +29,41 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
     protected SqlSession sqlSession;
     protected RedisTemplate<String, Object> redisTemplate;
     protected Boolean cacheable = false;
+    protected Long timeout = 60L;
 
     protected long selectCount(SqlWrapper sqlWrapper) {
         checkBuilderValid();
         sqlWrapper.formatSql();
         String sqlCount = String.format(sqlWrapper.getSqlBuilder().toString(), "count(1) selectCount");
         log.info(sqlCount);
+        List<Object> args = sqlWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         Map<String, Object> map;
-        try {
-            map = sqlRunner.selectOne(sqlCount, sqlWrapper.getArgs().toArray());
-            return (long) map.get("selectCount");
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
+        long count = 0;
+        if (cacheable) {
+            String cacheKey = getCacheKey(sqlCount, args);
+            if (redisTemplate.hasKey(cacheKey)) {
+                log.info("get cache from redis.");
+                return (long)redisTemplate.opsForValue().get(cacheKey);
+            }
+            try {
+                map = sqlRunner.selectOne(sqlCount, args.toArray());
+                count = (long) map.get("selectCount");
+                redisTemplate.opsForValue().set(cacheKey, count, timeout, TimeUnit.SECONDS);
+                log.info("cacheKey:{0}", cacheKey);
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
         }
-        return 0;
+        else {
+            try {
+                map = sqlRunner.selectOne(sqlCount, args.toArray());
+                count = (long) map.get("selectCount");
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
+        }
+        return count;
     }
 
     protected List<Map<String, Object>> selectList(SqlWrapper sqlWrapper) {
@@ -48,12 +71,29 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
         sqlWrapper.formatSql();
         String sql = sqlWrapper.getSql() + sqlWrapper.getOrderBy().toString();
         log.info(sql);
+        List<Object> args = sqlWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, sqlWrapper.getArgs().toArray());
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
+        if (cacheable) {
+            String cacheKey = getCacheKey(sql, args);
+            if (redisTemplate.hasKey(cacheKey)) {
+                log.info("get cache from redis.");
+                return (List<Map<String, Object>>)redisTemplate.opsForValue().get(cacheKey);
+            }
+            try {
+                mapList = sqlRunner.selectAll(sql, args.toArray());
+                redisTemplate.opsForValue().set(cacheKey, mapList, timeout, TimeUnit.SECONDS);
+                log.info("cacheKey:{0}", cacheKey);
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
+        }
+        else {
+            try {
+                mapList = sqlRunner.selectAll(sql, args.toArray());
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
         }
         return mapList;
     }
@@ -68,12 +108,29 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
         String sql = sqlWrapper.getSql() + sqlWrapper.getOrderBy().toString();
         sql += String.format(" limit %d,%d", (pageIndex - 1) * pageSize, pageSize);
         log.info(sql);
+        List<Object> args = sqlWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         List<Map<String, Object>> mapList = null;
-        try {
-            mapList = sqlRunner.selectAll(sql, sqlWrapper.getArgs().toArray());
-        } catch (SQLException sqlException) {
-            log.error(sqlException.getMessage());
+        if (cacheable) {
+            String cacheKey = getCacheKey(sql, args);
+            if (redisTemplate.hasKey(cacheKey)) {
+                log.info("get cache from redis.");
+                return (List<Map<String, Object>>)redisTemplate.opsForValue().get(cacheKey);
+            }
+            try {
+                mapList = sqlRunner.selectAll(sql, args.toArray());
+                redisTemplate.opsForValue().set(cacheKey, mapList, timeout, TimeUnit.SECONDS);
+                log.info("cacheKey:{0}", cacheKey);
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
+        }
+        else {
+            try {
+                mapList = sqlRunner.selectAll(sql, args.toArray());
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
         }
         return mapList;
     }
@@ -108,5 +165,23 @@ public class AbstractQueryBuilder extends QueryBuilderBase {
         if (cacheable && redisTemplate == null) {
             throw new NullPointerException("RedisTemplate Could not be null.");
         }
+    }
+
+    private String getCacheKey(String sql, List<Object> args) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<SqlArg> sqlArgs = new ArrayList<>();
+        for (Object arg: args) {
+            if (arg == null) {
+                SqlArg sqlArg = new SqlArg(null, "null");
+                sqlArgs.add(sqlArg);
+                continue;
+            }
+            String className = arg.getClass().getName();
+            SqlArg sqlArg = new SqlArg(arg, className);
+            sqlArgs.add(sqlArg);
+        }
+        String json = JSON.toJSONString(sqlArgs);
+        stringBuilder.append("SqlRunner-Plus.").append(sql).append(".").append(json);
+        return stringBuilder.toString();
     }
 }

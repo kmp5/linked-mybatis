@@ -50,6 +50,7 @@
         <lombok.version>1.18.16</lombok.version>
         <commons-lang3.version>3.8.1</commons-lang3.version>
         <spring.boot.version>2.2.13.RELEASE</spring.boot.version>
+        <fastjson.version>1.2.75</fastjson.version>
     </properties>
 
     <dependencies>
@@ -75,6 +76,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
             <version>${spring.boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>${fastjson.version}</version>
         </dependency>
     </dependencies>
 
