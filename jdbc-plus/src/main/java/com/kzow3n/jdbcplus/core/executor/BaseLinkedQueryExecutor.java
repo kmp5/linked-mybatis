@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class BaseLinkedQueryExecutor extends Executor {
 
     protected long selectCount(LinkedQueryWrapper linkedQueryWrapper) {
-        checkBuilderValid();
+        checkExecutorValid();
         linkedQueryWrapper.formatSql();
         String sqlCount = String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount");
         List<Object> args = linkedQueryWrapper.getArgs();
@@ -57,7 +57,7 @@ public class BaseLinkedQueryExecutor extends Executor {
     }
 
     protected List<Map<String, Object>> selectList(LinkedQueryWrapper linkedQueryWrapper) {
-        checkBuilderValid();
+        checkExecutorValid();
         linkedQueryWrapper.formatSql();
         String sql = linkedQueryWrapper.getSql() + linkedQueryWrapper.getOrderBy().toString();
         List<Object> args = linkedQueryWrapper.getArgs();
@@ -90,7 +90,7 @@ public class BaseLinkedQueryExecutor extends Executor {
     }
 
     protected <T> List<Map<String, Object>> selectPage(LinkedQueryWrapper linkedQueryWrapper, Page<T> page, long pageIndex, long pageSize) {
-        checkBuilderValid();
+        checkExecutorValid();
         long total = selectCount(linkedQueryWrapper);
         long pages = total % pageSize > 0 ? (total / pageSize) + 1L : total / pageSize;
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);

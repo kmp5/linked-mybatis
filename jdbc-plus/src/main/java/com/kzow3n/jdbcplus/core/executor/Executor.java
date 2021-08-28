@@ -33,7 +33,7 @@ public class Executor {
     protected Boolean cacheable = false;
     protected Long timeout = 60L;
 
-    protected void checkBuilderValid() {
+    protected void checkExecutorValid() {
         if (sqlSession == null) {
             throw new NullPointerException("SqlSession Could not be null.");
         }

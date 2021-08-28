@@ -54,7 +54,7 @@ public class BaseLinkedQueryWrapper {
         orderBy = new StringBuffer();
         columnInfos = new ArrayList<>();
         groupColumns = new ArrayList<>();
-        this.args = new ArrayList<>();
+        args = new ArrayList<>();
         blnFormatSql = false;
         blnDistinct = false;
         blnWhere = false;

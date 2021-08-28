@@ -22,7 +22,7 @@ import java.util.Map;
 public class BaseProcedureExecutor extends Executor {
 
     protected List<Map<String, Object>> execPro(String proName, Object... args) {
-        checkBuilderValid();
+        checkExecutorValid();
         StringBuilder sqlBuilder = new StringBuilder();
         sqlBuilder.append(String.format("call %s", proName));
         if (args != null) {
