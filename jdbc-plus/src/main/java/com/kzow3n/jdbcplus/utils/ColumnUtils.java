@@ -1,6 +1,9 @@
 package com.kzow3n.jdbcplus.utils;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.kzow3n.jdbcplus.pojo.TableInfo;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -76,5 +79,36 @@ public class ColumnUtils {
 
         // Spring 中的反射工具类获取Class中定义的Field
         return ReflectionUtils.findField(aClass, fieldName);
+    }
+
+    public static String getColumn(TableInfo tableInfo, Field field) {
+        if (tableInfo.getTableClass() != null) {
+            return getTableColumnByField(field);
+        }
+        else {
+            return getBeanColumnByField(field);
+        }
+    }
+
+    public static String getTableColumnByField(Field field) {
+        String tableColumn = null;
+        TableField annotation = field.getAnnotation(TableField.class);
+        if (annotation != null) {
+            tableColumn = annotation.value();
+        }
+        else {
+            TableId annotation2 = field.getAnnotation(TableId.class);
+            if (annotation2 != null) {
+                tableColumn = annotation2.value();
+            }
+        }
+        if (tableColumn == null) {
+            tableColumn = field.getName();
+        }
+        return tableColumn;
+    }
+
+    public static String getBeanColumnByField(Field field) {
+        return field.getName();
     }
 }

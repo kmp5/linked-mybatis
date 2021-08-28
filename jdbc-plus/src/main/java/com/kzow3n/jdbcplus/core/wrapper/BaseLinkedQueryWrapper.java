@@ -1,11 +1,11 @@
-package com.kzow3n.jdbcplus.core;
+package com.kzow3n.jdbcplus.core.wrapper;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.kzow3n.jdbcplus.pojo.ColumnInfo;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
+import com.kzow3n.jdbcplus.utils.ClazzUtils;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
@@ -24,10 +24,9 @@ import java.util.stream.Collectors;
  * @author owen
  * @since 2021/8/4
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 @Slf4j
-public class AbstractSqlWrapper extends SqlWrapperBase {
+public class BaseLinkedQueryWrapper {
 
     protected List<TableInfo> tableInfos;
     protected List<TableInfo> selectAllTableInfos;
@@ -113,7 +112,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             return null;
         }
 
-        String tableColumn = getColumn(tableInfo, field1);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field1);
         String beanColumn = field2.getName();
         ColumnInfo columnInfo = new ColumnInfo();
         columnInfo.setTableIndex(tableInfo.getTableIndex());
@@ -134,7 +133,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             return null;
         }
 
-        String tableColumn = getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
         ColumnInfo columnInfo = new ColumnInfo();
         columnInfo.setTableIndex(tableInfo.getTableIndex());
         columnInfo.setTableColumns(tableColumn);
@@ -152,7 +151,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
     }
 
     protected void appendFrom(Class<?> clazz, String tableId) {
-        String tableName = getTableNameByClass(clazz);
+        String tableName = ClazzUtils.getTableName(clazz);
         TableInfo tableInfo = new TableInfo(tableId, clazz);
         tableInfos.add(tableInfo);
         int tableIndex = tableInfos.indexOf(tableInfo);
@@ -166,27 +165,27 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         }
     }
 
-    protected void appendFrom(Consumer<SqlWrapper> consumer, String tableId) {
+    protected void appendFrom(Consumer<LinkedQueryWrapper> consumer, String tableId) {
         TableInfo tableInfo = new TableInfo();
         tableInfo.setTableId(tableId);
         tableInfos.add(tableInfo);
         int tableIndex = tableInfos.indexOf(tableInfo);
         tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        sqlWrapper.formatSql();
-        args.addAll(sqlWrapper.getArgs());
+        LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+        consumer.accept(linkedQueryWrapper);
+        linkedQueryWrapper.formatSql();
+        args.addAll(linkedQueryWrapper.getArgs());
         if (blnDistinct) {
             blnDistinct = false;
-            sqlBuilder.append("select distinct %s from ").append(String.format("(%s) %s ", sqlWrapper.getSql(), tableId));
+            sqlBuilder.append("select distinct %s from ").append(String.format("(%s) %s ", linkedQueryWrapper.getSql(), tableId));
         }
         else {
-            sqlBuilder.append("select %s from ").append(String.format("(%s) %s ", sqlWrapper.getSql(), tableId));
+            sqlBuilder.append("select %s from ").append(String.format("(%s) %s ", linkedQueryWrapper.getSql(), tableId));
         }
     }
 
     protected void appendJoin(Class<?> clazz, String tableId, String joinType) {
-        String tableName = getTableNameByClass(clazz);
+        String tableName = ClazzUtils.getTableName(clazz);
         TableInfo tableInfo = new TableInfo(tableId, clazz);
         tableInfos.add(tableInfo);
         int tableIndex = tableInfos.indexOf(tableInfo);
@@ -194,16 +193,16 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sqlBuilder.append(String.format("%s %s %s ", joinType, tableName, tableId));
     }
 
-    protected void appendJoin(Consumer<SqlWrapper> consumer, String tableId, String joinType) {
+    protected void appendJoin(Consumer<LinkedQueryWrapper> consumer, String tableId, String joinType) {
         TableInfo tableInfo = new TableInfo();
         tableInfo.setTableId(tableId);
         tableInfos.add(tableInfo);
         int tableIndex = tableInfos.indexOf(tableInfo);
         tableInfos.get(tableIndex).setTableIndex(tableIndex + 1);
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        consumer.accept(sqlWrapper);
-        sqlWrapper.formatSql();
-        sqlBuilder.append(String.format("%s (%s) %s ", joinType, sqlWrapper.getSql(), tableId));
+        LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+        consumer.accept(linkedQueryWrapper);
+        linkedQueryWrapper.formatSql();
+        sqlBuilder.append(String.format("%s (%s) %s ", joinType, linkedQueryWrapper.getSql(), tableId));
     }
 
     protected void appendOn(String tableId1, String column1, String tableId2, String column2) {
@@ -240,7 +239,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
                     columnInfos.add(columnInfo);
                     continue;
                 }
-                List<Field> fields = getAllFields(clazz);
+                List<Field> fields = ClazzUtils.getAllFields(clazz);
                 for (Field field : fields) {
                     addColumnInfoByField(tableInfo, field, formatBeanColumn, null, null);
                 }
@@ -322,7 +321,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sqlBuilder.append(String.format("%s.%s is not null ", tableId, column));
     }
 
-    protected void eq(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+    protected void eq(String tableId, String column, Object arg, Consumer<LinkedQueryWrapper> consumer) {
         spendOperator();
         if (consumer == null) {
             if (arg != null) {
@@ -334,11 +333,11 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             }
         }
         else {
-            SqlWrapper sqlWrapper = new SqlWrapper();
-            consumer.accept(sqlWrapper);
-            sqlWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s = (%s) ", tableId, column, sqlWrapper.getSql()));
-            args.addAll(sqlWrapper.getArgs());
+            LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+            consumer.accept(linkedQueryWrapper);
+            linkedQueryWrapper.formatSql();
+            sqlBuilder.append(String.format("%s.%s = (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            args.addAll(linkedQueryWrapper.getArgs());
         }
     }
 
@@ -348,7 +347,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
     }
 
 
-    protected void ne(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+    protected void ne(String tableId, String column, Object arg, Consumer<LinkedQueryWrapper> consumer) {
         spendOperator();
         if (consumer == null) {
             if (arg != null) {
@@ -360,42 +359,42 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             }
         }
         else {
-            SqlWrapper sqlWrapper = new SqlWrapper();
-            consumer.accept(sqlWrapper);
-            sqlWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s <> (%s) ", tableId, column, sqlWrapper.getSql()));
-            args.addAll(sqlWrapper.getArgs());
+            LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+            consumer.accept(linkedQueryWrapper);
+            linkedQueryWrapper.formatSql();
+            sqlBuilder.append(String.format("%s.%s <> (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            args.addAll(linkedQueryWrapper.getArgs());
         }
     }
 
-    protected void gt(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+    protected void gt(String tableId, String column, Object arg, Consumer<LinkedQueryWrapper> consumer) {
         compare(tableId, column, arg, consumer, ">");
     }
 
-    protected void ge(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+    protected void ge(String tableId, String column, Object arg, Consumer<LinkedQueryWrapper> consumer) {
         compare(tableId, column, arg, consumer, ">=");
     }
 
-    protected void lt(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+    protected void lt(String tableId, String column, Object arg, Consumer<LinkedQueryWrapper> consumer) {
         compare(tableId, column, arg, consumer, "<");
     }
 
-    protected void le(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer) {
+    protected void le(String tableId, String column, Object arg, Consumer<LinkedQueryWrapper> consumer) {
         compare(tableId, column, arg, consumer, "<=");
     }
 
-    private void compare(String tableId, String column, Object arg, Consumer<SqlWrapper> consumer, String compareType) {
+    private void compare(String tableId, String column, Object arg, Consumer<LinkedQueryWrapper> consumer, String compareType) {
         spendOperator();
         if (consumer == null) {
             sqlBuilder.append(String.format("%s.%s %s ? ", tableId, column, compareType));
             args.add(arg);
         }
         else {
-            SqlWrapper sqlWrapper = new SqlWrapper();
-            consumer.accept(sqlWrapper);
-            sqlWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s %s (%s) ", tableId, column, compareType, sqlWrapper.getSql()));
-            args.addAll(sqlWrapper.getArgs());
+            LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+            consumer.accept(linkedQueryWrapper);
+            linkedQueryWrapper.formatSql();
+            sqlBuilder.append(String.format("%s.%s %s (%s) ", tableId, column, compareType, linkedQueryWrapper.getSql()));
+            args.addAll(linkedQueryWrapper.getArgs());
         }
     }
 
@@ -443,7 +442,7 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         args.add(arg2);
     }
 
-    protected void in(String tableId, String column, List<?> args, Consumer<SqlWrapper> consumer) {
+    protected void in(String tableId, String column, List<?> args, Consumer<LinkedQueryWrapper> consumer) {
         spendOperator();
         if (consumer == null) {
             this.args.addAll(args);
@@ -454,15 +453,15 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, String.join(",", params)));
         }
         else {
-            SqlWrapper sqlWrapper = new SqlWrapper();
-            consumer.accept(sqlWrapper);
-            sqlWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, sqlWrapper.getSql()));
-            this.args.addAll(sqlWrapper.getArgs());
+            LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+            consumer.accept(linkedQueryWrapper);
+            linkedQueryWrapper.formatSql();
+            sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            this.args.addAll(linkedQueryWrapper.getArgs());
         }
     }
 
-    protected void notIn(String tableId, String column, List<?> args, Consumer<SqlWrapper> consumer) {
+    protected void notIn(String tableId, String column, List<?> args, Consumer<LinkedQueryWrapper> consumer) {
         spendOperator();
         if (consumer == null) {
             this.args.addAll(args);
@@ -473,11 +472,11 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
             sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, String.join(",", params)));
         }
         else {
-            SqlWrapper sqlWrapper = new SqlWrapper();
-            consumer.accept(sqlWrapper);
-            sqlWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, sqlWrapper.getSql()));
-            this.args.addAll(sqlWrapper.getArgs());
+            LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+            consumer.accept(linkedQueryWrapper);
+            linkedQueryWrapper.formatSql();
+            sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            this.args.addAll(linkedQueryWrapper.getArgs());
         }
     }
 
@@ -489,14 +488,14 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sqlBuilder.append(String.format("exists(%s) ", sql));
     }
 
-    protected void appendExists(Consumer<SqlWrapper> consumer) {
+    protected void appendExists(Consumer<LinkedQueryWrapper> consumer) {
         spendOperator();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        sqlWrapper.setParentTableInfos(this.tableInfos);
-        consumer.accept(sqlWrapper);
-        sqlWrapper.formatSql();
-        sqlBuilder.append(String.format("exists(%s) ", sqlWrapper.getSql()));
-        this.args.addAll(sqlWrapper.getArgs());
+        LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+        linkedQueryWrapper.setParentTableInfos(this.tableInfos);
+        consumer.accept(linkedQueryWrapper);
+        linkedQueryWrapper.formatSql();
+        sqlBuilder.append(String.format("exists(%s) ", linkedQueryWrapper.getSql()));
+        this.args.addAll(linkedQueryWrapper.getArgs());
     }
 
     protected void appendNotExists(String sql, Object... args) {
@@ -507,14 +506,14 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         sqlBuilder.append(String.format("not exists(%s) ", sql));
     }
 
-    protected void appendNotExists(Consumer<SqlWrapper> consumer) {
+    protected void appendNotExists(Consumer<LinkedQueryWrapper> consumer) {
         spendOperator();
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        sqlWrapper.setParentTableInfos(this.tableInfos);
-        consumer.accept(sqlWrapper);
-        sqlWrapper.formatSql();
-        sqlBuilder.append(String.format("not exists(%s) ", sqlWrapper.getSql()));
-        this.args.addAll(sqlWrapper.getArgs());
+        LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+        linkedQueryWrapper.setParentTableInfos(this.tableInfos);
+        consumer.accept(linkedQueryWrapper);
+        linkedQueryWrapper.formatSql();
+        sqlBuilder.append(String.format("not exists(%s) ", linkedQueryWrapper.getSql()));
+        this.args.addAll(linkedQueryWrapper.getArgs());
     }
 
     @SafeVarargs
@@ -563,12 +562,12 @@ public class AbstractSqlWrapper extends SqlWrapperBase {
         having = sql;
     }
 
-    protected void appendHaving(Consumer<SqlWrapper> consumer) {
-        SqlWrapper sqlWrapper = new SqlWrapper();
-        sqlWrapper.setTableInfos(this.tableInfos);
-        consumer.accept(sqlWrapper);
-        sqlWrapper.formatSql();
-        String having = sqlWrapper.getSql();
+    protected void appendHaving(Consumer<LinkedQueryWrapper> consumer) {
+        LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
+        linkedQueryWrapper.setTableInfos(this.tableInfos);
+        consumer.accept(linkedQueryWrapper);
+        linkedQueryWrapper.formatSql();
+        String having = linkedQueryWrapper.getSql();
         this.having = having.replaceFirst("where", "having");
     }
 

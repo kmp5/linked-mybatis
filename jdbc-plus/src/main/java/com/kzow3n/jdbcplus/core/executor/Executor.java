@@ -1,31 +1,67 @@
-package com.kzow3n.jdbcplus.core.query;
+package com.kzow3n.jdbcplus.core.executor;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
+import com.kzow3n.jdbcplus.pojo.SqlArg;
+import com.kzow3n.jdbcplus.utils.ClazzUtils;
+import lombok.Data;
+import org.apache.ibatis.session.SqlSession;
 import org.springframework.cglib.beans.BeanMap;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 查询器的一些私有方法
+ * 执行器基类
  *
  * @author owen
- * @since 2021/8/26
+ * @since 2021/8/28
  */
-public class QueryBuilderBase {
+@Data
+public class Executor {
+
+    protected SqlSession sqlSession;
+    protected RedisTemplate<String, Object> redisTemplate;
+    protected Boolean cacheable = false;
+    protected Long timeout = 60L;
+
+    protected void checkBuilderValid() {
+        if (sqlSession == null) {
+            throw new NullPointerException("SqlSession Could not be null.");
+        }
+        if (cacheable && redisTemplate == null) {
+            throw new NullPointerException("RedisTemplate Could not be null.");
+        }
+    }
+
+    protected String getCacheKey(String sql, List<Object> args) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<SqlArg> sqlArgs = new ArrayList<>();
+        for (Object arg: args) {
+            if (arg == null) {
+                SqlArg sqlArg = new SqlArg(null, "null");
+                sqlArgs.add(sqlArg);
+                continue;
+            }
+            String className = arg.getClass().getName();
+            SqlArg sqlArg = new SqlArg(arg, className);
+            sqlArgs.add(sqlArg);
+        }
+        String json = JSON.toJSONString(sqlArgs);
+        stringBuilder.append("SqlRunner-Plus.").append(sql).append(".").append(json);
+        return stringBuilder.toString();
+    }
 
     protected <T> void updateMap(Map<String, Object> map, Class<T> clazz) {
-        List<Field> fields = getAllFields(clazz);
+        List<Field> fields = ClazzUtils.getAllFields(clazz);
         Map<String, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(Field::getName, t -> t.getType().getName()));
         for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -91,62 +127,5 @@ public class QueryBuilderBase {
         T bean = ClassUtils.newInstance(clazz);
         BeanMap.create(bean).putAll(map);
         return bean;
-    }
-
-    protected void updateMapsKeys(List<Map<String, Object>> mapList, Class<?> clazz) {
-        List<Field> fields = getAllFields(clazz);
-        for (Field field : fields) {
-            String tableColumn = getTableColumnByField(field);
-            if (StringUtils.isNotBlank(tableColumn)) {
-                String beanColumn = field.getName();
-                mapList.forEach(map -> {
-                    map.put(beanColumn, map.remove(tableColumn));
-                });
-            }
-        }
-    }
-
-    protected void updateMapKeys(Map<String, Object> map, Class<?> clazz) {
-        List<Field> fields = getAllFields(clazz);
-        for (Field field : fields) {
-            String tableColumn = getTableColumnByField(field);
-            if (StringUtils.isNotBlank(tableColumn)) {
-                String beanColumn = field.getName();
-                map.put(beanColumn, map.remove(tableColumn));
-            }
-        }
-    }
-
-    private List<Field> getAllFields(Class<?> clazz) {
-        List<Field> fields = Arrays.stream(clazz.getDeclaredFields()).collect(Collectors.toList());
-        addSuperClassFields(fields, clazz);
-        return fields;
-    }
-
-    private void addSuperClassFields(List<Field> fields, Class<?> clazz) {
-        Class<?> superClazz = clazz.getSuperclass();
-        if (superClazz == null) {
-            return;
-        }
-        fields.addAll(Arrays.asList(superClazz.getDeclaredFields()));
-        addSuperClassFields(fields, superClazz);
-    }
-
-    private String getTableColumnByField(Field field) {
-        String tableColumn = null;
-        TableField annotation = field.getAnnotation(TableField.class);
-        if (annotation != null) {
-            tableColumn = annotation.value();
-        }
-        else {
-            TableId annotation2 = field.getAnnotation(TableId.class);
-            if (annotation2 != null) {
-                tableColumn = annotation2.value();
-            }
-        }
-        if (tableColumn == null) {
-            tableColumn = field.getName();
-        }
-        return tableColumn;
     }
 }

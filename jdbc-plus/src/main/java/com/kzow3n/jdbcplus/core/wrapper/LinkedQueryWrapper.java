@@ -1,7 +1,7 @@
-package com.kzow3n.jdbcplus.core;
+package com.kzow3n.jdbcplus.core.wrapper;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import com.kzow3n.jdbcplus.core.column.AggregateWrapper;
+import com.kzow3n.jdbcplus.core.wrapper.column.AggregateWrapper;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,9 +19,9 @@ import java.util.function.Consumer;
  * @author owen
  * @since 2021/8/4
  */
-public class SqlWrapper extends AbstractSqlWrapper {
+public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
 
-    public SqlWrapper() {
+    public LinkedQueryWrapper() {
         init();
     }
 
@@ -32,12 +32,12 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     //region 拼接基本Sql
 
-    public SqlWrapper distinct() {
+    public LinkedQueryWrapper distinct() {
         blnDistinct = true;
         return this;
     }
 
-    public SqlWrapper selectAll(Integer... tableIndexes) {
+    public LinkedQueryWrapper selectAll(Integer... tableIndexes) {
         for (Integer tableIndex : tableIndexes) {
             TableInfo selectAllTableInfo = new TableInfo(tableIndex, true);
             selectAllTableInfos.add(selectAllTableInfo);
@@ -46,7 +46,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
     }
 
     @SafeVarargs
-    public final <K> SqlWrapper select(Integer tableIndex, SFunction<K, ?>... fns) {
+    public final <K> LinkedQueryWrapper select(Integer tableIndex, SFunction<K, ?>... fns) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         for (SFunction<K, ?> fn : fns) {
             Field field = ColumnUtils.getField(fn);
@@ -55,7 +55,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K, M> SqlWrapper select(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper select(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
@@ -63,111 +63,111 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper select(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+    public final <K> LinkedQueryWrapper select(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         addColumnInfoByField(tableInfo, field1, true, beanColumn, null);
         return this;
     }
 
-    public final <M> SqlWrapper select(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper select(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         Field field2 = ColumnUtils.getField(fn2);
         String beanColumn = field2.getName();
         addColumnInfo(tableIndex, tableColumn, beanColumn, null);
         return this;
     }
 
-    public SqlWrapper select(Integer tableIndex, String tableColumns, @Nullable String beanColumns) {
+    public LinkedQueryWrapper select(Integer tableIndex, String tableColumns, @Nullable String beanColumns) {
         addColumnInfo(tableIndex, tableColumns, beanColumns, null);
         return this;
     }
 
-    public SqlWrapper from(Class<?> clazz, String tableId) {
+    public LinkedQueryWrapper from(Class<?> clazz, String tableId) {
         appendFrom(clazz, tableId);
         return this;
     }
 
-    public SqlWrapper from(Consumer<SqlWrapper> consumer, String tableId) {
+    public LinkedQueryWrapper from(Consumer<LinkedQueryWrapper> consumer, String tableId) {
         appendFrom(consumer, tableId);
         return this;
     }
 
-    public SqlWrapper innerJoin(Class<?> clazz, String tableId) {
+    public LinkedQueryWrapper innerJoin(Class<?> clazz, String tableId) {
         appendJoin(clazz, tableId, "inner join");
         return this;
     }
 
-    public SqlWrapper innerJoin(Consumer<SqlWrapper> consumer, String tableId) {
+    public LinkedQueryWrapper innerJoin(Consumer<LinkedQueryWrapper> consumer, String tableId) {
         appendJoin(consumer, tableId, "inner join");
         return this;
     }
 
-    public SqlWrapper leftJoin(Class<?> clazz, String tableId) {
+    public LinkedQueryWrapper leftJoin(Class<?> clazz, String tableId) {
         appendJoin(clazz, tableId, "left join");
         return this;
     }
 
-    public SqlWrapper leftJoin(Consumer<SqlWrapper> consumer, String tableId) {
+    public LinkedQueryWrapper leftJoin(Consumer<LinkedQueryWrapper> consumer, String tableId) {
         appendJoin(consumer, tableId, "left join");
         return this;
     }
 
-    public SqlWrapper rightJoin(Class<?> clazz, String tableId) {
+    public LinkedQueryWrapper rightJoin(Class<?> clazz, String tableId) {
         appendJoin(clazz, tableId, "right join");
         return this;
     }
 
-    public SqlWrapper rightJoin(Consumer<SqlWrapper> consumer, String tableId) {
+    public LinkedQueryWrapper rightJoin(Consumer<LinkedQueryWrapper> consumer, String tableId) {
         appendJoin(consumer, tableId, "right join");
         return this;
     }
 
-    public SqlWrapper fullJoin(Class<?> clazz, String tableId) {
+    public LinkedQueryWrapper fullJoin(Class<?> clazz, String tableId) {
         appendJoin(clazz, tableId, "full join");
         return this;
     }
 
-    public SqlWrapper fullJoin(Consumer<SqlWrapper> consumer, String tableId) {
+    public LinkedQueryWrapper fullJoin(Consumer<LinkedQueryWrapper> consumer, String tableId) {
         appendJoin(consumer, tableId, "full join");
         return this;
     }
 
-    public <K, M> SqlWrapper on(Integer tableIndex1, SFunction<K, ?> fn1, Integer tableIndex2, SFunction<M, ?> fn2) {
+    public <K, M> LinkedQueryWrapper on(Integer tableIndex1, SFunction<K, ?> fn1, Integer tableIndex2, SFunction<M, ?> fn2) {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         TableInfo tableInfo2 = getTableInfoByIndex(tableIndex2);
         String tableId1 = tableInfo1.getTableId();
         String tableId2 = tableInfo2.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
         Field field2 = ColumnUtils.getField(fn2);
-        String column2 = getColumn(tableInfo2, field2);
+        String column2 = ColumnUtils.getColumn(tableInfo2, field2);
         appendOn(tableId1, column1, tableId2, column2);
         return this;
     }
 
-    public <K> SqlWrapper on(Integer tableIndex1, SFunction<K, ?> fn1, Integer tableIndex2, String column2) {
+    public <K> LinkedQueryWrapper on(Integer tableIndex1, SFunction<K, ?> fn1, Integer tableIndex2, String column2) {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         TableInfo tableInfo2 = getTableInfoByIndex(tableIndex2);
         String tableId1 = tableInfo1.getTableId();
         String tableId2 = tableInfo2.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
         appendOn(tableId1, column1, tableId2, column2);
         return this;
     }
 
-    public <M> SqlWrapper on(Integer tableIndex1, String column1, Integer tableIndex2, SFunction<M, ?> fn2) {
+    public <M> LinkedQueryWrapper on(Integer tableIndex1, String column1, Integer tableIndex2, SFunction<M, ?> fn2) {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         TableInfo tableInfo2 = getTableInfoByIndex(tableIndex2);
         String tableId1 = tableInfo1.getTableId();
         String tableId2 = tableInfo2.getTableId();
         Field field2 = ColumnUtils.getField(fn2);
-        String column2 = getColumn(tableInfo2, field2);
+        String column2 = ColumnUtils.getColumn(tableInfo2, field2);
         appendOn(tableId1, column1, tableId2, column2);
         return this;
     }
 
-    public SqlWrapper on(Integer tableIndex1, String column1, Integer tableIndex2, String column2) {
+    public LinkedQueryWrapper on(Integer tableIndex1, String column1, Integer tableIndex2, String column2) {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         TableInfo tableInfo2 = getTableInfoByIndex(tableIndex2);
         String tableId1 = tableInfo1.getTableId();
@@ -176,19 +176,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper count(SFunction<K, ?> fn) {
+    public final <K> LinkedQueryWrapper count(SFunction<K, ?> fn) {
         Field field = ColumnUtils.getField(fn);
         String beanColumn = field.getName();
         addColumnInfo(null, "count(*)", beanColumn, null);
         return this;
     }
 
-    public SqlWrapper count(String beanColumn) {
+    public LinkedQueryWrapper count(String beanColumn) {
         addColumnInfo(null, "count(*)", beanColumn, null);
         return this;
     }
 
-    public final <K, M> SqlWrapper count(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper count(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
@@ -196,26 +196,26 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper count(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+    public final <K> LinkedQueryWrapper count(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         addColumnInfoByField(tableInfo, field1, true, beanColumn, "count(%s)");
         return this;
     }
 
-    public final <M> SqlWrapper count(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper count(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         Field field2 = ColumnUtils.getField(fn2);
         String beanColumn = field2.getName();
         addColumnInfo(tableIndex, tableColumn, beanColumn, "count(%s)");
         return this;
     }
 
-    public SqlWrapper count(Integer tableIndex, String tableColumn, String beanColumn) {
+    public LinkedQueryWrapper count(Integer tableIndex, String tableColumn, String beanColumn) {
         addColumnInfo(tableIndex, tableColumn, beanColumn, "count(%s)");
         return this;
     }
 
-    public final <K, M> SqlWrapper avg(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper avg(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
@@ -223,26 +223,26 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper avg(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+    public final <K> LinkedQueryWrapper avg(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         addColumnInfoByField(tableInfo, field1, true, beanColumn, "avg(%s)");
         return this;
     }
 
-    public final <M> SqlWrapper avg(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper avg(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         Field field2 = ColumnUtils.getField(fn2);
         String beanColumn = field2.getName();
         addColumnInfo(tableIndex, tableColumn, beanColumn, "avg(%s)");
         return this;
     }
 
-    public SqlWrapper avg(Integer tableIndex, String tableColumn, String beanColumn) {
+    public LinkedQueryWrapper avg(Integer tableIndex, String tableColumn, String beanColumn) {
         addColumnInfo(tableIndex, tableColumn, beanColumn, "avg(%s)");
         return this;
     }
 
-    public final <K, M> SqlWrapper sum(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper sum(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
@@ -250,26 +250,26 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper sum(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+    public final <K> LinkedQueryWrapper sum(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         addColumnInfoByField(tableInfo, field1, true, beanColumn, "sum(%s)");
         return this;
     }
 
-    public final <M> SqlWrapper sum(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper sum(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         Field field2 = ColumnUtils.getField(fn2);
         String beanColumn = field2.getName();
         addColumnInfo(tableIndex, tableColumn, beanColumn, "sum(%s)");
         return this;
     }
 
-    public SqlWrapper sum(Integer tableIndex, String tableColumn, String beanColumn) {
+    public LinkedQueryWrapper sum(Integer tableIndex, String tableColumn, String beanColumn) {
         addColumnInfo(tableIndex, tableColumn, beanColumn, "sum(%s)");
         return this;
     }
 
-    public final <K, M> SqlWrapper max(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper max(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
@@ -277,26 +277,26 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper max(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+    public final <K> LinkedQueryWrapper max(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         addColumnInfoByField(tableInfo, field1, true, beanColumn, "max(%s)");
         return this;
     }
 
-    public final <M> SqlWrapper max(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper max(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         Field field2 = ColumnUtils.getField(fn2);
         String beanColumn = field2.getName();
         addColumnInfo(tableIndex, tableColumn, beanColumn, "max(%s)");
         return this;
     }
 
-    public SqlWrapper max(Integer tableIndex, String tableColumn, String beanColumn) {
+    public LinkedQueryWrapper max(Integer tableIndex, String tableColumn, String beanColumn) {
         addColumnInfo(tableIndex, tableColumn, beanColumn, "max(%s)");
         return this;
     }
 
-    public final <K, M> SqlWrapper min(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper min(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
@@ -304,26 +304,26 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper min(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+    public final <K> LinkedQueryWrapper min(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         addColumnInfoByField(tableInfo, field1, true, beanColumn, "min(%s)");
         return this;
     }
 
-    public final <M> SqlWrapper min(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper min(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         Field field2 = ColumnUtils.getField(fn2);
         String beanColumn = field2.getName();
         addColumnInfo(tableIndex, tableColumn, beanColumn, "min(%s)");
         return this;
     }
 
-    public SqlWrapper min(Integer tableIndex, String tableColumn, String beanColumn) {
+    public LinkedQueryWrapper min(Integer tableIndex, String tableColumn, String beanColumn) {
         addColumnInfo(tableIndex, tableColumn, beanColumn, "min(%s)");
         return this;
     }
 
-    public final <K, M> SqlWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
@@ -331,26 +331,26 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public final <K> SqlWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
+    public final <K> LinkedQueryWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         addColumnInfoByField(tableInfo, field1, true, beanColumn, "group_concat(%s)");
         return this;
     }
 
-    public final <M> SqlWrapper groupConcat(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper groupConcat(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         Field field2 = ColumnUtils.getField(fn2);
         String beanColumn = field2.getName();
         addColumnInfo(tableIndex, tableColumn, beanColumn, "group_concat(%s)");
         return this;
     }
 
-    public SqlWrapper groupConcat(Integer tableIndex, String tableColumn, String beanColumn) {
+    public LinkedQueryWrapper groupConcat(Integer tableIndex, String tableColumn, String beanColumn) {
         addColumnInfo(tableIndex, tableColumn, beanColumn, "group_concat(%s)");
         return this;
     }
 
-    public SqlWrapper formatSql() {
+    public LinkedQueryWrapper formatSql() {
         formatFullSql();
         return this;
     }
@@ -359,12 +359,12 @@ public class SqlWrapper extends AbstractSqlWrapper {
 
     //region 条件构造器
 
-    public SqlWrapper or() {
+    public LinkedQueryWrapper or() {
         blnOr = true;
         return this;
     }
 
-    public SqlWrapper or(Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper or(Consumer<LinkedQueryWrapper> consumer) {
         blnOr = true;
         spendOperator();
         sqlBuilder.append("(");
@@ -374,7 +374,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public SqlWrapper and(Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper and(Consumer<LinkedQueryWrapper> consumer) {
         spendOperator();
         sqlBuilder.append("(");
         blnOpenBracket = true;
@@ -383,55 +383,55 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper isNull(Integer tableIndex, SFunction<K, ?> fn) {
+    public <K> LinkedQueryWrapper isNull(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         isNull(tableId, column);
         return this;
     }
 
-    public SqlWrapper isNull(Integer tableIndex, String column) {
+    public LinkedQueryWrapper isNull(Integer tableIndex, String column) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         isNull(tableId, column);
         return this;
     }
 
-    public <K> SqlWrapper isNotNull(Integer tableIndex, SFunction<K, ?> fn) {
+    public <K> LinkedQueryWrapper isNotNull(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         isNotNull(tableId, column);
         return this;
     }
 
-    public SqlWrapper isNotNull(Integer tableIndex, String column) {
+    public LinkedQueryWrapper isNotNull(Integer tableIndex, String column) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         isNotNull(tableId, column);
         return this;
     }
 
-    public <K> SqlWrapper eq(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+    public <K> LinkedQueryWrapper eq(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         eq(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper eq(Integer tableIndex, String column, Object arg) {
+    public LinkedQueryWrapper eq(Integer tableIndex, String column, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         eq(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+    public LinkedQueryWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -442,23 +442,23 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper eq(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper eq(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         eq(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper eq(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper eq(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         eq(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+    public LinkedQueryWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -469,44 +469,44 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K, M> SqlWrapper eq(Integer tableIndex1, SFunction<K, ?> fn1, String tableId2, SFunction<M, ?> fn2) {
+    public <K, M> LinkedQueryWrapper eq(Integer tableIndex1, SFunction<K, ?> fn1, String tableId2, SFunction<M, ?> fn2) {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         String tableId1 = tableInfo1.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
         Field field2 = ColumnUtils.getField(fn2);
         TableInfo tableInfo2 = getTableInfoById(parentTableInfos, tableId2);
-        String column2 = getColumn(tableInfo2, field2);
+        String column2 = ColumnUtils.getColumn(tableInfo2, field2);
         eq(tableId1, column1, tableId2, column2);
         return this;
     }
 
-    public <K> SqlWrapper eq(Integer tableIndex1, SFunction<K, ?> fn1, String tableId2, String column2) {
+    public <K> LinkedQueryWrapper eq(Integer tableIndex1, SFunction<K, ?> fn1, String tableId2, String column2) {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         String tableId1 = tableInfo1.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
         eq(tableId1, column1, tableId2, column2);
         return this;
     }
 
-    public <K> SqlWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+    public <K> LinkedQueryWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         ne(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper ne(Integer tableIndex, String column, Object arg) {
+    public LinkedQueryWrapper ne(Integer tableIndex, String column, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         ne(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+    public LinkedQueryWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -517,23 +517,23 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper ne(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         ne(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper ne(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper ne(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         ne(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+    public LinkedQueryWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -544,19 +544,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper gt(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+    public <K> LinkedQueryWrapper gt(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
         if (arg == null) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         gt(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper gt(Integer tableIndex, String column, Object arg) {
+    public LinkedQueryWrapper gt(Integer tableIndex, String column, Object arg) {
         if (arg == null) {
             return this;
         }
@@ -566,7 +566,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public SqlWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+    public LinkedQueryWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -577,23 +577,23 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper gt(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper gt(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         gt(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper gt(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper gt(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         gt(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+    public LinkedQueryWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -604,19 +604,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper ge(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+    public <K> LinkedQueryWrapper ge(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
         if (arg == null) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         ge(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper ge(Integer tableIndex, String column, Object arg) {
+    public LinkedQueryWrapper ge(Integer tableIndex, String column, Object arg) {
         if (arg == null) {
             return this;
         }
@@ -626,7 +626,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public SqlWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+    public LinkedQueryWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -637,23 +637,23 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper ge(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper ge(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         ge(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper ge(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper ge(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         ge(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+    public LinkedQueryWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -664,19 +664,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper lt(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+    public <K> LinkedQueryWrapper lt(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
         if (arg == null) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         lt(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper lt(Integer tableIndex, String column, Object arg) {
+    public LinkedQueryWrapper lt(Integer tableIndex, String column, Object arg) {
         if (arg == null) {
             return this;
         }
@@ -686,7 +686,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public SqlWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+    public LinkedQueryWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -697,23 +697,23 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper lt(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper lt(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         lt(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper lt(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper lt(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         lt(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+    public LinkedQueryWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -724,19 +724,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper le(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
+    public <K> LinkedQueryWrapper le(Integer tableIndex, SFunction<K, ?> fn, Object arg) {
         if (arg == null) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         le(tableId, column, arg, null);
         return this;
     }
 
-    public SqlWrapper le(Integer tableIndex, String column, Object arg) {
+    public LinkedQueryWrapper le(Integer tableIndex, String column, Object arg) {
         if (arg == null) {
             return this;
         }
@@ -746,7 +746,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public SqlWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
+    public LinkedQueryWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -757,23 +757,23 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper le(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper le(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         le(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper le(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper le(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         le(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<SqlWrapper> consumer2) {
+    public LinkedQueryWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         AggregateWrapper aggregateWrapper = new AggregateWrapper();
@@ -784,19 +784,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper like(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+    public <K> LinkedQueryWrapper like(Integer tableIndex, SFunction<K, ?> fn, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         like(tableId, column, arg);
         return this;
     }
 
-    public SqlWrapper like(Integer tableIndex, String column, String arg) {
+    public LinkedQueryWrapper like(Integer tableIndex, String column, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
@@ -806,19 +806,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper likeLeft(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+    public <K> LinkedQueryWrapper likeLeft(Integer tableIndex, SFunction<K, ?> fn, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         likeLeft(tableId, column, arg);
         return this;
     }
 
-    public SqlWrapper likeLeft(Integer tableIndex, String column, String arg) {
+    public LinkedQueryWrapper likeLeft(Integer tableIndex, String column, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
@@ -828,19 +828,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper likeRight(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+    public <K> LinkedQueryWrapper likeRight(Integer tableIndex, SFunction<K, ?> fn, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         likeRight(tableId, column, arg);
         return this;
     }
 
-    public SqlWrapper likeRight(Integer tableIndex, String column, String arg) {
+    public LinkedQueryWrapper likeRight(Integer tableIndex, String column, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
@@ -850,19 +850,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper notLike(Integer tableIndex, SFunction<K, ?> fn, String arg) {
+    public <K> LinkedQueryWrapper notLike(Integer tableIndex, SFunction<K, ?> fn, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         notLike(tableId, column, arg);
         return this;
     }
 
-    public SqlWrapper notLike(Integer tableIndex, String column, String arg) {
+    public LinkedQueryWrapper notLike(Integer tableIndex, String column, String arg) {
         if (StringUtils.isBlank(arg)) {
             return this;
         }
@@ -872,19 +872,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper between(Integer tableIndex, SFunction<K, ?> fn, Object arg1, Object arg2) {
+    public <K> LinkedQueryWrapper between(Integer tableIndex, SFunction<K, ?> fn, Object arg1, Object arg2) {
         if (arg1 == null || arg2 == null) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         between(tableId, column, arg1, arg2);
         return this;
     }
 
-    public SqlWrapper between(Integer tableIndex, String column, Object arg1, Object arg2) {
+    public LinkedQueryWrapper between(Integer tableIndex, String column, Object arg1, Object arg2) {
         if (arg1 == null || arg2 == null) {
             return this;
         }
@@ -894,7 +894,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public SqlWrapper between(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg1, Object arg2) {
+    public LinkedQueryWrapper between(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg1, Object arg2) {
         if (arg1 == null || arg2 == null) {
             return this;
         }
@@ -908,19 +908,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper notBetween(Integer tableIndex, SFunction<K, ?> fn, Object arg1, Object arg2) {
+    public <K> LinkedQueryWrapper notBetween(Integer tableIndex, SFunction<K, ?> fn, Object arg1, Object arg2) {
         if (arg1 == null || arg2 == null) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         notBetween(tableId, column, arg1, arg2);
         return this;
     }
 
-    public SqlWrapper notBetween(Integer tableIndex, String column, Object arg1, Object arg2) {
+    public LinkedQueryWrapper notBetween(Integer tableIndex, String column, Object arg1, Object arg2) {
         if (arg1 == null || arg2 == null) {
             return this;
         }
@@ -930,7 +930,7 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public SqlWrapper notBetween(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg1, Object arg2) {
+    public LinkedQueryWrapper notBetween(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg1, Object arg2) {
         if (arg1 == null || arg2 == null) {
             return this;
         }
@@ -944,20 +944,20 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper in(Integer tableIndex, SFunction<K, ?> fn, Object... args) {
+    public <K> LinkedQueryWrapper in(Integer tableIndex, SFunction<K, ?> fn, Object... args) {
         if (args == null || args.length == 0) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         List<Object> list = Arrays.asList(args);
         in(tableId, column, list, null);
         return this;
     }
 
-    public SqlWrapper in(Integer tableIndex, String column, Object... args) {
+    public LinkedQueryWrapper in(Integer tableIndex, String column, Object... args) {
         if (args == null || args.length == 0) {
             return this;
         }
@@ -968,19 +968,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper in(Integer tableIndex, SFunction<K, ?> fn, List<?> args) {
+    public <K> LinkedQueryWrapper in(Integer tableIndex, SFunction<K, ?> fn, List<?> args) {
         if (CollectionUtils.isEmpty(args)) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         in(tableId, column, args, null);
         return this;
     }
 
-    public SqlWrapper in(Integer tableIndex, String column, List<?> args) {
+    public LinkedQueryWrapper in(Integer tableIndex, String column, List<?> args) {
         if (CollectionUtils.isEmpty(args)) {
             return this;
         }
@@ -990,36 +990,36 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper in(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper in(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         in(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper in(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper in(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         in(tableId, column, null, consumer);
         return this;
     }
 
-    public <K> SqlWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, Object... args) {
+    public <K> LinkedQueryWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, Object... args) {
         if (args == null || args.length == 0) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         List<Object> list = Arrays.asList(args);
         notIn(tableId, column, list, null);
         return this;
     }
 
-    public SqlWrapper notIn(Integer tableIndex, String column, Object... args) {
+    public LinkedQueryWrapper notIn(Integer tableIndex, String column, Object... args) {
         if (args == null || args.length == 0) {
             return this;
         }
@@ -1030,19 +1030,19 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, List<?> args) {
+    public <K> LinkedQueryWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, List<?> args) {
         if (CollectionUtils.isEmpty(args)) {
             return this;
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         notIn(tableId, column, args, null);
         return this;
     }
 
-    public SqlWrapper notIn(Integer tableIndex, String column, List<?> args) {
+    public LinkedQueryWrapper notIn(Integer tableIndex, String column, List<?> args) {
         if (CollectionUtils.isEmpty(args)) {
             return this;
         }
@@ -1052,141 +1052,141 @@ public class SqlWrapper extends AbstractSqlWrapper {
         return this;
     }
 
-    public <K> SqlWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, Consumer<SqlWrapper> consumer) {
+    public <K> LinkedQueryWrapper notIn(Integer tableIndex, SFunction<K, ?> fn, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         notIn(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper notIn(Integer tableIndex, String column, Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper notIn(Integer tableIndex, String column, Consumer<LinkedQueryWrapper> consumer) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         notIn(tableId, column, null, consumer);
         return this;
     }
 
-    public SqlWrapper exists(String sql, @Nullable Object... args) {
+    public LinkedQueryWrapper exists(String sql, @Nullable Object... args) {
         appendExists(sql, args);
         return this;
     }
 
-    public SqlWrapper exists(Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper exists(Consumer<LinkedQueryWrapper> consumer) {
         appendExists(consumer);
         return this;
     }
 
-    public SqlWrapper notExists(String sql, @Nullable Object... args) {
+    public LinkedQueryWrapper notExists(String sql, @Nullable Object... args) {
         appendNotExists(sql, args);
         return this;
     }
 
-    public SqlWrapper notExists(Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper notExists(Consumer<LinkedQueryWrapper> consumer) {
         appendNotExists(consumer);
         return this;
     }
 
     @SafeVarargs
-    public final <K> SqlWrapper groupBy(Integer tableIndex, SFunction<K, ?>... fns) {
+    public final <K> LinkedQueryWrapper groupBy(Integer tableIndex, SFunction<K, ?>... fns) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         groupBy(tableInfo, fns);
         return this;
     }
 
-    public final <K, M> SqlWrapper groupBy(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
+    public final <K, M> LinkedQueryWrapper groupBy(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         groupBy(tableInfo, fn1, fn2);
         return this;
     }
 
-    public final <K> SqlWrapper groupBy(Integer tableIndex, SFunction<K, ?> fn1, @Nullable String beanColumn) {
+    public final <K> LinkedQueryWrapper groupBy(Integer tableIndex, SFunction<K, ?> fn1, @Nullable String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         groupBy(tableInfo, fn1, beanColumn);
         return this;
     }
 
-    public final <M> SqlWrapper groupBy(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
+    public final <M> LinkedQueryWrapper groupBy(Integer tableIndex, String tableColumn, SFunction<M, ?> fn2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         groupBy(tableInfo, tableColumn, fn2);
         return this;
     }
 
-    public SqlWrapper groupBy(Integer tableIndex, String tableColumn, @Nullable String beanColumn) {
+    public LinkedQueryWrapper groupBy(Integer tableIndex, String tableColumn, @Nullable String beanColumn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         groupBy(tableInfo, tableColumn, beanColumn);
         return this;
     }
 
-    public SqlWrapper having(String sql, @Nullable Object... args) {
+    public LinkedQueryWrapper having(String sql, @Nullable Object... args) {
         appendHaving(sql, args);
         return this;
     }
 
-    public SqlWrapper having(Consumer<SqlWrapper> consumer) {
+    public LinkedQueryWrapper having(Consumer<LinkedQueryWrapper> consumer) {
         appendHaving(consumer);
         return this;
     }
 
-    public <K> SqlWrapper orderBy(Integer tableIndex, SFunction<K, ?> fn) {
+    public <K> LinkedQueryWrapper orderBy(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         orderBy(tableId, column, true, false);
         return this;
     }
 
-    public SqlWrapper orderBy(Integer tableIndex, String column) {
+    public LinkedQueryWrapper orderBy(Integer tableIndex, String column) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         orderBy(tableId, column, true, false);
         return this;
     }
 
-    public <K> SqlWrapper orderByDesc(Integer tableIndex, SFunction<K, ?> fn) {
+    public <K> LinkedQueryWrapper orderByDesc(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         orderBy(tableId, column, true, true);
         return this;
     }
 
-    public SqlWrapper orderByDesc(Integer tableIndex, String column) {
+    public LinkedQueryWrapper orderByDesc(Integer tableIndex, String column) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         orderBy(tableId, column, true, true);
         return this;
     }
 
-    public <K> SqlWrapper thenBy(Integer tableIndex, SFunction<K, ?> fn) {
+    public <K> LinkedQueryWrapper thenBy(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         orderBy(tableId, column, false, false);
         return this;
     }
 
-    public SqlWrapper thenBy(Integer tableIndex, String column) {
+    public LinkedQueryWrapper thenBy(Integer tableIndex, String column) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         orderBy(tableId, column, false, false);
         return this;
     }
 
-    public <K> SqlWrapper thenByDesc(Integer tableIndex, SFunction<K, ?> fn) {
+    public <K> LinkedQueryWrapper thenByDesc(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field);
         orderBy(tableId, column, false, true);
         return this;
     }
 
-    public SqlWrapper thenByDesc(Integer tableIndex, String column) {
+    public LinkedQueryWrapper thenByDesc(Integer tableIndex, String column) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         orderBy(tableId, column, false, true);

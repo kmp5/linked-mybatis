@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.kmp5</groupId>
-    <artifactId>sqlrunner-plus</artifactId>
+    <artifactId>linked-mybatis</artifactId>
     <version>0.0.6</version>
     <packaging>jar</packaging>
 
