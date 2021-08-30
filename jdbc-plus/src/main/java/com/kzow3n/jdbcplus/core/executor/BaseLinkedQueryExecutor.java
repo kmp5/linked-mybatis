@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kzow3n.jdbcplus.core.wrapper.LinkedQueryWrapper;
 import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -23,10 +22,9 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         checkExecutorValid();
         linkedQueryWrapper.formatSql();
         String limit = linkedQueryWrapper.getLimit();
-        String sqlCount = String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount");
-        if (StringUtils.isNotBlank(limit)) {
-            sqlCount += limit;
-        }
+        String sqlCount =
+                String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount")
+                + limit;
         List<Object> args = linkedQueryWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         Map<String, Object> map;
@@ -41,8 +39,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             try {
                 map = sqlRunner.selectOne(sqlCount, args.toArray());
                 count = Long.parseLong(map.get("selectCount").toString());
-                redisTemplate.opsForValue().set(cacheKey, count, timeout, TimeUnit.SECONDS);
-                log.info(String.format("cacheKey:%s", cacheKey));
+                doCache(cacheKey, count);
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
@@ -78,8 +75,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             log.info(sql);
             try {
                 mapList = sqlRunner.selectAll(sql, args.toArray());
-                redisTemplate.opsForValue().set(cacheKey, mapList, timeout, TimeUnit.SECONDS);
-                log.info(String.format("cacheKey:%s", cacheKey));
+                doCache(cacheKey, mapList);
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
@@ -118,8 +114,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             log.info(sql);
             try {
                 mapList = sqlRunner.selectAll(sql, args.toArray());
-                redisTemplate.opsForValue().set(cacheKey, mapList, timeout, TimeUnit.SECONDS);
-                log.info(String.format("cacheKey:%s", cacheKey));
+                doCache(cacheKey, mapList);
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
@@ -133,6 +128,16 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             }
         }
         return mapList;
+    }
+
+    private void doCache(String cacheKey, Object value) {
+        if (!redisTemplate.hasKey(cacheKey)) {
+            redisTemplate.opsForValue().set(cacheKey, value, timeout, TimeUnit.SECONDS);
+            log.info(String.format("cacheKey:%s has bean cached.", cacheKey));
+        }
+        else {
+            log.info(String.format("cacheKey:%s already exists.", cacheKey));
+        }
     }
 
 }
