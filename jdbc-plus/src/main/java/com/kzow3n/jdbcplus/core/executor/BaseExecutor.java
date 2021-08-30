@@ -31,7 +31,8 @@ public class BaseExecutor {
     protected SqlSession sqlSession;
     protected RedisTemplate<String, Object> redisTemplate;
     protected Boolean cacheable = false;
-    protected Long timeout = 60L;
+    protected Long cacheTimeout = 60L;
+    protected Integer queryTimeout = 60;
 
     protected void checkExecutorValid() {
         if (sqlSession == null) {

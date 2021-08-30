@@ -35,7 +35,7 @@ public class BaseProcedureExecutor extends BaseExecutor {
         String sql = sqlBuilder.toString();
         log.info(sql);
         List<Map<String, Object>> mapList = null;
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection(), queryTimeout);
         try {
             mapList = sqlRunner.selectAll(sql, args);
         } catch (SQLException sqlException) {

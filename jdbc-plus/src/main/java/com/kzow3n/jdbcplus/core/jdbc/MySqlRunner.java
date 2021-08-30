@@ -17,9 +17,16 @@ public class MySqlRunner {
     private final Connection connection;
     private final TypeHandlerRegistry typeHandlerRegistry;
     private boolean useGeneratedKeySupport;
+    private int queryTimeout = 60;
 
     public MySqlRunner(Connection connection) {
         this.connection = connection;
+        this.typeHandlerRegistry = new TypeHandlerRegistry();
+    }
+
+    public MySqlRunner(Connection connection, int queryTimeout) {
+        this.connection = connection;
+        this.queryTimeout = queryTimeout;
         this.typeHandlerRegistry = new TypeHandlerRegistry();
     }
 
@@ -38,13 +45,15 @@ public class MySqlRunner {
 
     public List<Map<String, Object>> selectAll(String sql, Object... args) throws SQLException {
         PreparedStatement ps = this.connection.prepareStatement(sql);
+        ps.setQueryTimeout(queryTimeout);
 
         List<Map<String, Object>> result;
         try {
             this.setParameters(ps, args);
             ResultSet rs = ps.executeQuery();
             result = this.getResults(rs);
-        } finally {
+        }
+        finally {
             try {
                 ps.close();
             } catch (SQLException ignored) {

@@ -32,11 +32,11 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
         this.cacheable = cacheable;
     }
 
-    public LinkedQueryExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long timeout) {
+    public LinkedQueryExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long cacheTimeout) {
         this.sqlSession = sqlSession;
         this.redisTemplate = redisTemplate;
         this.cacheable = cacheable;
-        this.timeout = timeout;
+        this.cacheTimeout = cacheTimeout;
     }
 
     public long forCount(LinkedQueryWrapper linkedQueryWrapper) {
