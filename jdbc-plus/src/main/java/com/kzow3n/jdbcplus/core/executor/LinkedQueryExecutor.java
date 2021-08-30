@@ -26,6 +26,19 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
         this.redisTemplate = redisTemplate;
     }
 
+    public LinkedQueryExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable) {
+        this.sqlSession = sqlSession;
+        this.redisTemplate = redisTemplate;
+        this.cacheable = cacheable;
+    }
+
+    public LinkedQueryExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long timeout) {
+        this.sqlSession = sqlSession;
+        this.redisTemplate = redisTemplate;
+        this.cacheable = cacheable;
+        this.timeout = timeout;
+    }
+
     public long forCount(LinkedQueryWrapper linkedQueryWrapper) {
         return selectCount(linkedQueryWrapper);
     }
@@ -47,7 +60,6 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
-        updateMapList(mapList, clazz);
         return mapsToBeans(mapList, clazz);
     }
 
@@ -60,7 +72,6 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
         if (map == null) {
             return null;
         }
-        updateMap(map, clazz);
         return mapToBean(map, clazz);
     }
 
@@ -77,7 +88,6 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
         if (CollectionUtils.isEmpty(mapList)) {
             return page;
         }
-        updateMapList(mapList, clazz);
         List<T> list = mapsToBeans(mapList, clazz);
         page.setRecords(list);
         return page;

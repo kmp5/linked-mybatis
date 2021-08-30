@@ -19,7 +19,7 @@ import java.util.Map;
  * @since 2021/8/28
  */
 @Slf4j
-public class BaseProcedureExecutor extends Executor {
+public class BaseProcedureExecutor extends BaseExecutor {
 
     protected List<Map<String, Object>> execPro(String proName, Object... args) {
         checkExecutorValid();

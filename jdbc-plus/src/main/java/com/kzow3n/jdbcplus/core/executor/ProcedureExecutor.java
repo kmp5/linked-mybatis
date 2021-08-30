@@ -25,6 +25,19 @@ public class ProcedureExecutor extends BaseProcedureExecutor {
         this.redisTemplate = redisTemplate;
     }
 
+    public ProcedureExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable) {
+        this.sqlSession = sqlSession;
+        this.redisTemplate = redisTemplate;
+        this.cacheable = cacheable;
+    }
+
+    public ProcedureExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long timeout) {
+        this.sqlSession = sqlSession;
+        this.redisTemplate = redisTemplate;
+        this.cacheable = cacheable;
+        this.timeout = timeout;
+    }
+
     public List<Map<String, Object>> forMaps(String proName, @Nullable Object... args) {
         return execPro(proName, args);
     }
@@ -43,7 +56,6 @@ public class ProcedureExecutor extends BaseProcedureExecutor {
             return null;
         }
         updateMapsKeys(mapList, clazz);
-        updateMapList(mapList, clazz);
         return mapsToBeans(mapList, clazz);
     }
 
@@ -57,7 +69,6 @@ public class ProcedureExecutor extends BaseProcedureExecutor {
             return null;
         }
         updateMapKeys(map, clazz);
-        updateMap(map, clazz);
         return mapToBean(map, clazz);
     }
 }

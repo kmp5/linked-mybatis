@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * @since 2021/8/28
  */
 @Data
-public class Executor {
+public class BaseExecutor {
 
     protected SqlSession sqlSession;
     protected RedisTemplate<String, Object> redisTemplate;
@@ -35,10 +35,10 @@ public class Executor {
 
     protected void checkExecutorValid() {
         if (sqlSession == null) {
-            throw new NullPointerException("SqlSession Could not be null.");
+            throw new NullPointerException("sqlSession could not be null.");
         }
         if (cacheable && redisTemplate == null) {
-            throw new NullPointerException("RedisTemplate Could not be null.");
+            throw new NullPointerException("redisTemplate could not be null.");
         }
     }
 
@@ -56,8 +56,19 @@ public class Executor {
             sqlArgs.add(sqlArg);
         }
         String json = JSON.toJSONString(sqlArgs);
-        stringBuilder.append("SqlRunner-Plus.").append(sql).append(".").append(json);
+        stringBuilder.append("linked-mybatis:").append(sql).append(":").append(json);
         return stringBuilder.toString();
+    }
+
+    protected <T> List<T> mapsToBeans(List<Map<String, Object>> maps, Class<T> clazz) {
+        return CollectionUtils.isEmpty(maps) ? Collections.emptyList() : maps.stream().map((e) -> mapToBean(e, clazz)).collect(Collectors.toList());
+    }
+
+    protected <T> T mapToBean(Map<String, Object> map, Class<T> clazz) {
+        updateMap(map, clazz);
+        T bean = ClassUtils.newInstance(clazz);
+        BeanMap.create(bean).putAll(map);
+        return bean;
     }
 
     protected <T> void updateMap(Map<String, Object> map, Class<T> clazz) {
@@ -111,21 +122,5 @@ public class Executor {
                 }
             }
         }
-    }
-
-    protected <T> void updateMapList(List<Map<String, Object>> mapList, Class<T> clazz) {
-        for (Map<String, Object> map : mapList) {
-            updateMap(map, clazz);
-        }
-    }
-
-    protected <T> List<T> mapsToBeans(List<? extends Map<String, ?>> maps, Class<T> clazz) {
-        return CollectionUtils.isEmpty(maps) ? Collections.emptyList() : maps.stream().map((e) -> mapToBean(e, clazz)).collect(Collectors.toList());
-    }
-
-    protected <T> T mapToBean(Map<String, ?> map, Class<T> clazz) {
-        T bean = ClassUtils.newInstance(clazz);
-        BeanMap.create(bean).putAll(map);
-        return bean;
     }
 }

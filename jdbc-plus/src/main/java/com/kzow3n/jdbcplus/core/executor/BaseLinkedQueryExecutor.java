@@ -3,8 +3,8 @@ package com.kzow3n.jdbcplus.core.executor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kzow3n.jdbcplus.core.wrapper.LinkedQueryWrapper;
 import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -16,9 +16,8 @@ import java.util.concurrent.TimeUnit;
  * @author owen
  * @since 2021/8/26
  */
-@Data
 @Slf4j
-public class BaseLinkedQueryExecutor extends Executor {
+public class BaseLinkedQueryExecutor extends BaseExecutor {
 
     protected long selectCount(LinkedQueryWrapper linkedQueryWrapper) {
         checkExecutorValid();
@@ -58,9 +57,14 @@ public class BaseLinkedQueryExecutor extends Executor {
 
     protected List<Map<String, Object>> selectList(LinkedQueryWrapper linkedQueryWrapper) {
         checkExecutorValid();
+        String id = linkedQueryWrapper.getId();
+        if (StringUtils.isBlank(id)) {
+            throw new RuntimeException("id could not be blank.");
+        }
         linkedQueryWrapper.formatSql();
         String sql = linkedQueryWrapper.getSql() + linkedQueryWrapper.getOrderBy().toString();
         List<Object> args = linkedQueryWrapper.getArgs();
+
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         List<Map<String, Object>> mapList = null;
         if (cacheable) {
