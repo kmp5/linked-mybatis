@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 存储过程执行器基本方法类
@@ -37,6 +38,8 @@ public class BaseProcedureExecutor extends BaseExecutor {
         List<Map<String, Object>> mapList = null;
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection(), queryTimeout);
         try {
+            //若存储过程中有执行update操作，按需传入redisTemplate清空缓存
+            clearCache();
             mapList = sqlRunner.selectAll(sql, args);
         } catch (SQLException sqlException) {
             log.error(sqlException.getMessage());
@@ -66,5 +69,16 @@ public class BaseProcedureExecutor extends BaseExecutor {
                 map.put(beanColumn, map.remove(tableColumn));
             }
         }
+    }
+
+    private void clearCache() {
+        if (redisTemplate == null) {
+            return;
+        }
+        Set<String> keys = redisTemplate.keys("linked-mybatis:*");
+        if (keys == null) {
+            return;
+        }
+        redisTemplate.delete(keys);
     }
 }
