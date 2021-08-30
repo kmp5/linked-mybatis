@@ -1193,5 +1193,15 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         return this;
     }
 
+    public LinkedQueryWrapper limit(int limit) {
+        appendLimit(limit);
+        return this;
+    }
+
+    public LinkedQueryWrapper limit(int offset, int limit) {
+        appendLimit(offset, limit);
+        return this;
+    }
+
     //endregion
 }

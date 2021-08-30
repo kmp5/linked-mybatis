@@ -22,7 +22,11 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
     protected long selectCount(LinkedQueryWrapper linkedQueryWrapper) {
         checkExecutorValid();
         linkedQueryWrapper.formatSql();
+        String limit = linkedQueryWrapper.getLimit();
         String sqlCount = String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount");
+        if (StringUtils.isNotBlank(limit)) {
+            sqlCount += limit;
+        }
         List<Object> args = linkedQueryWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         Map<String, Object> map;
@@ -57,12 +61,10 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
 
     protected List<Map<String, Object>> selectList(LinkedQueryWrapper linkedQueryWrapper) {
         checkExecutorValid();
-        String id = linkedQueryWrapper.getId();
-        if (StringUtils.isBlank(id)) {
-            throw new RuntimeException("id could not be blank.");
-        }
         linkedQueryWrapper.formatSql();
-        String sql = linkedQueryWrapper.getSql() + linkedQueryWrapper.getOrderBy().toString();
+        String sql = linkedQueryWrapper.getSql()
+                + linkedQueryWrapper.getOrderBy().toString()
+                + linkedQueryWrapper.getLimit();
         List<Object> args = linkedQueryWrapper.getArgs();
 
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
@@ -95,13 +97,15 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
 
     protected <T> List<Map<String, Object>> selectPage(LinkedQueryWrapper linkedQueryWrapper, Page<T> page, long pageIndex, long pageSize) {
         checkExecutorValid();
+        linkedQueryWrapper.formatSql();
+        linkedQueryWrapper.setLimit("");
         long total = selectCount(linkedQueryWrapper);
         long pages = total % pageSize > 0 ? (total / pageSize) + 1L : total / pageSize;
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
 
-        linkedQueryWrapper.formatSql();
-        String sql = linkedQueryWrapper.getSql() + linkedQueryWrapper.getOrderBy().toString();
-        sql += String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
+        String sql = linkedQueryWrapper.getSql()
+                + linkedQueryWrapper.getOrderBy().toString()
+                + String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
         List<Object> args = linkedQueryWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection());
         List<Map<String, Object>> mapList = null;

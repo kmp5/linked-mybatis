@@ -31,29 +31,31 @@ public class BaseLinkedQueryWrapper {
     protected List<TableInfo> tableInfos;
     protected List<TableInfo> selectAllTableInfos;
     protected List<TableInfo> parentTableInfos;
+    protected StringBuffer sqlBuilder;
     protected List<ColumnInfo> columnInfos;
     protected List<String> groupColumns;
-    protected StringBuffer sqlBuilder;
-    protected StringBuffer orderBy;
-    protected String sql;
     protected String having;
+    protected StringBuffer orderBy;
+    protected String limit;
+    protected String sql;
+    protected List<Object> args;
     protected boolean blnFormatSql;
     protected boolean blnDistinct;
     protected boolean blnWhere;
     protected boolean blnOr;
     protected boolean blnOpenBracket;
-    protected List<Object> args;
 
     protected void init() {
         tableInfos = new ArrayList<>();
         selectAllTableInfos = new ArrayList<>();
         parentTableInfos = new ArrayList<>();
-        sql = "";
-        having = "";
         sqlBuilder = new StringBuffer();
-        orderBy = new StringBuffer();
         columnInfos = new ArrayList<>();
         groupColumns = new ArrayList<>();
+        having = "";
+        orderBy = new StringBuffer();
+        limit = "";
+        sql = "";
         args = new ArrayList<>();
         blnFormatSql = false;
         blnDistinct = false;
@@ -581,5 +583,13 @@ public class BaseLinkedQueryWrapper {
         if (blnDesc) {
             orderBy.append(" desc");
         }
+    }
+
+    protected void appendLimit(int limit) {
+        this.limit = String.format(" limit %d", limit);
+    }
+
+    protected void appendLimit(int offset, int limit) {
+        this.limit = String.format(" limit %d,%d", offset, limit);
     }
 }
