@@ -163,7 +163,7 @@ public class MySqlRunner {
         while (rs.next()) {
             Map<String, Object> rowMap = new HashMap<>(columnCount);
             for (int i = 1; i <= columnCount; i++) {
-                rowMap.put(rmd.getColumnName(i), rs.getObject(i));
+                rowMap.put(rmd.getColumnLabel(i), rs.getObject(i));
             }
             list.add(rowMap);
         }

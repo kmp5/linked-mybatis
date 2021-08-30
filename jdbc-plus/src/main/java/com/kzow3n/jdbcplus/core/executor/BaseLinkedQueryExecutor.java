@@ -130,9 +130,19 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         return mapList;
     }
 
-    private void doCache(String cacheKey, Object value) {
+    private void doCache(String cacheKey, long count) {
         if (!redisTemplate.hasKey(cacheKey)) {
-            redisTemplate.opsForValue().set(cacheKey, value, cacheTimeout, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(cacheKey, count, cacheTimeout, TimeUnit.SECONDS);
+            log.info(String.format("cacheKey:%s has bean cached.", cacheKey));
+        }
+        else {
+            log.info(String.format("cacheKey:%s already exists.", cacheKey));
+        }
+    }
+
+    private void doCache(String cacheKey, List<Map<String, Object>> mapList) {
+        if (!redisTemplate.hasKey(cacheKey)) {
+            redisTemplate.opsForValue().set(cacheKey, mapList, cacheTimeout, TimeUnit.SECONDS);
             log.info(String.format("cacheKey:%s has bean cached.", cacheKey));
         }
         else {
