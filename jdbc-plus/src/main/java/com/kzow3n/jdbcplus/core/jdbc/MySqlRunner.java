@@ -1,6 +1,8 @@
 package com.kzow3n.jdbcplus.core.jdbc;
 
 import org.apache.ibatis.jdbc.Null;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
@@ -14,24 +16,22 @@ import java.util.*;
  * @since 2021/8/13
  */
 public class MySqlRunner {
-    private final Connection connection;
+    protected SqlSession sqlSession;
+    private final SqlSessionFactory sqlSessionFactory;
     private final TypeHandlerRegistry typeHandlerRegistry;
-    private boolean useGeneratedKeySupport;
     private int queryTimeout = 60;
 
-    public MySqlRunner(Connection connection) {
-        this.connection = connection;
+    public MySqlRunner(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession) {
+        this.sqlSessionFactory = sqlSessionFactory;
+        this.sqlSession = sqlSession;
         this.typeHandlerRegistry = new TypeHandlerRegistry();
     }
 
-    public MySqlRunner(Connection connection, int queryTimeout) {
-        this.connection = connection;
+    public MySqlRunner(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession, int queryTimeout) {
+        this.sqlSessionFactory = sqlSessionFactory;
+        this.sqlSession = sqlSession;
         this.queryTimeout = queryTimeout;
         this.typeHandlerRegistry = new TypeHandlerRegistry();
-    }
-
-    public void setUseGeneratedKeySupport(boolean useGeneratedKeySupport) {
-        this.useGeneratedKeySupport = useGeneratedKeySupport;
     }
 
     public Map<String, Object> selectOne(String sql, Object... args) throws SQLException {
@@ -44,10 +44,39 @@ public class MySqlRunner {
     }
 
     public List<Map<String, Object>> selectAll(String sql, Object... args) throws SQLException {
-        PreparedStatement ps = this.connection.prepareStatement(sql);
-        ps.setQueryTimeout(queryTimeout);
-
         List<Map<String, Object>> result;
+        if (sqlSession != null) {
+            Connection connection = sqlSession.getConnection();
+            if (!connection.isClosed()) {
+                PreparedStatement ps = connection.prepareStatement(sql);
+                ps.setQueryTimeout(queryTimeout);
+                try {
+                    this.setParameters(ps, args);
+                    ResultSet rs = ps.executeQuery();
+                    result = this.getResults(rs);
+                }
+                finally {
+                    try {
+                        ps.close();
+                    } catch (SQLException ignored) {
+                    }
+                }
+            }
+            else {
+                result = selectAllBySqlSessionFactory(sqlSessionFactory, sql, args);
+            }
+        }
+        else {
+            result = selectAllBySqlSessionFactory(sqlSessionFactory, sql, args);
+        }
+        return result;
+    }
+
+    private List<Map<String, Object>> selectAllBySqlSessionFactory(SqlSessionFactory sqlSessionFactory, String sql, Object... args) throws SQLException {
+        List<Map<String, Object>> result;
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        PreparedStatement ps = sqlSession.getConnection().prepareStatement(sql);
+        ps.setQueryTimeout(queryTimeout);
         try {
             this.setParameters(ps, args);
             ResultSet rs = ps.executeQuery();
@@ -56,81 +85,12 @@ public class MySqlRunner {
         finally {
             try {
                 ps.close();
+                sqlSession.commit();
+                sqlSession.close();
             } catch (SQLException ignored) {
             }
         }
         return result;
-    }
-
-    public int insert(String sql, Object... args) throws SQLException {
-        PreparedStatement ps;
-        if (this.useGeneratedKeySupport) {
-            ps = this.connection.prepareStatement(sql, 1);
-        } else {
-            ps = this.connection.prepareStatement(sql);
-        }
-
-        int var20;
-        try {
-            this.setParameters(ps, args);
-            ps.executeUpdate();
-            if (this.useGeneratedKeySupport) {
-                List<Map<String, Object>> keys = this.getResults(ps.getGeneratedKeys());
-                if (keys.size() == 1) {
-                    Map<String, Object> key = keys.get(0);
-                    Iterator<Object> i = key.values().iterator();
-                    if (i.hasNext()) {
-                        Object genkey = i.next();
-                        if (genkey != null) {
-                            try {
-                                return Integer.parseInt(genkey.toString());
-                            } catch (NumberFormatException ignored) {
-                            }
-                        }
-                    }
-                }
-            }
-
-            var20 = -2147482647;
-        } finally {
-            try {
-                ps.close();
-            } catch (SQLException ignored) {
-            }
-
-        }
-
-        return var20;
-    }
-
-    public int update(String sql, Object... args) throws SQLException {
-        PreparedStatement ps = this.connection.prepareStatement(sql);
-
-        int var4;
-        try {
-            this.setParameters(ps, args);
-            var4 = ps.executeUpdate();
-        } finally {
-            try {
-                ps.close();
-            } catch (SQLException ignored) {
-            }
-
-        }
-
-        return var4;
-    }
-
-    public int delete(String sql, Object... args) throws SQLException {
-        return this.update(sql, args);
-    }
-
-    public void run(String sql) throws SQLException {
-
-        try (Statement stmt = this.connection.createStatement()) {
-            stmt.execute(sql);
-        }
-
     }
 
     private void setParameters(PreparedStatement ps, Object... args) throws SQLException {

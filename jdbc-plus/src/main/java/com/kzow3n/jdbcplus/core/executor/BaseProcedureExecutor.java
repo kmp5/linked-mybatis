@@ -36,7 +36,7 @@ public class BaseProcedureExecutor extends BaseExecutor {
         String sql = sqlBuilder.toString();
         log.info(sql);
         List<Map<String, Object>> mapList = null;
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection(), queryTimeout);
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
         try {
             mapList = sqlRunner.selectAll(sql, args);
             //若存储过程中有执行update操作，按需传入redisTemplate清空缓存

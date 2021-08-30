@@ -26,7 +26,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
                 String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount")
                 + limit;
         List<Object> args = linkedQueryWrapper.getArgs();
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection(), queryTimeout);
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
         Map<String, Object> map;
         long count = 0L;
         if (cacheable) {
@@ -64,7 +64,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
                 + linkedQueryWrapper.getLimit();
         List<Object> args = linkedQueryWrapper.getArgs();
 
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection(), queryTimeout);
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
         List<Map<String, Object>> mapList = null;
         if (cacheable) {
             String cacheKey = getCacheKey(sql, args);
@@ -103,7 +103,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
                 + linkedQueryWrapper.getOrderBy().toString()
                 + String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
         List<Object> args = linkedQueryWrapper.getArgs();
-        MySqlRunner sqlRunner = new MySqlRunner(sqlSession.getConnection(), queryTimeout);
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
         List<Map<String, Object>> mapList = null;
         if (cacheable) {
             String cacheKey = getCacheKey(sql, args);

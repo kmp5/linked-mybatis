@@ -3,6 +3,7 @@ package com.kzow3n.jdbcplus.core.executor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kzow3n.jdbcplus.core.wrapper.LinkedQueryWrapper;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 
@@ -17,22 +18,37 @@ import java.util.Map;
  */
 public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
 
-    public LinkedQueryExecutor(SqlSession sqlSession) {
+    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory) {
+        this.sqlSessionFactory = sqlSessionFactory;
+    }
+
+    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession) {
+        this.sqlSessionFactory = sqlSessionFactory;
         this.sqlSession = sqlSession;
     }
 
-    public LinkedQueryExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate) {
-        this.sqlSession = sqlSession;
+    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, RedisTemplate<String, Object> redisTemplate, Boolean cacheable) {
+        this.sqlSessionFactory = sqlSessionFactory;
         this.redisTemplate = redisTemplate;
+        this.cacheable = cacheable;
     }
 
-    public LinkedQueryExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable) {
+    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable) {
+        this.sqlSessionFactory = sqlSessionFactory;
         this.sqlSession = sqlSession;
         this.redisTemplate = redisTemplate;
         this.cacheable = cacheable;
     }
 
-    public LinkedQueryExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long cacheTimeout) {
+    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long cacheTimeout) {
+        this.sqlSessionFactory = sqlSessionFactory;
+        this.redisTemplate = redisTemplate;
+        this.cacheable = cacheable;
+        this.cacheTimeout = cacheTimeout;
+    }
+
+    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long cacheTimeout) {
+        this.sqlSessionFactory = sqlSessionFactory;
         this.sqlSession = sqlSession;
         this.redisTemplate = redisTemplate;
         this.cacheable = cacheable;

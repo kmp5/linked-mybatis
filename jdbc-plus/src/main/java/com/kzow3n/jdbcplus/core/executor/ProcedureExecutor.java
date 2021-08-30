@@ -1,6 +1,7 @@
 package com.kzow3n.jdbcplus.core.executor;
 
 import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
@@ -16,8 +17,17 @@ import java.util.Map;
  */
 public class ProcedureExecutor extends BaseProcedureExecutor {
 
+    public ProcedureExecutor(SqlSessionFactory sqlSessionFactory) {
+        this.sqlSessionFactory = sqlSessionFactory;
+    }
+
     public ProcedureExecutor(SqlSession sqlSession) {
         this.sqlSession = sqlSession;
+    }
+
+    public ProcedureExecutor(SqlSessionFactory sqlSessionFactory, RedisTemplate<String, Object> redisTemplate) {
+        this.sqlSessionFactory = sqlSessionFactory;
+        this.redisTemplate = redisTemplate;
     }
 
     public ProcedureExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate) {

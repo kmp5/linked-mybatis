@@ -6,6 +6,7 @@ import com.kzow3n.jdbcplus.pojo.SqlArg;
 import com.kzow3n.jdbcplus.utils.ClazzUtils;
 import lombok.Data;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.cglib.beans.BeanMap;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
@@ -29,14 +30,15 @@ import java.util.stream.Collectors;
 public class BaseExecutor {
 
     protected SqlSession sqlSession;
+    protected SqlSessionFactory sqlSessionFactory;
     protected RedisTemplate<String, Object> redisTemplate;
     protected Boolean cacheable = false;
     protected Long cacheTimeout = 60L;
     protected Integer queryTimeout = 60;
 
     protected void checkExecutorValid() {
-        if (sqlSession == null) {
-            throw new NullPointerException("sqlSession could not be null.");
+        if (sqlSessionFactory == null) {
+            throw new NullPointerException("sqlSessionFactory could not be null.");
         }
         if (cacheable && redisTemplate == null) {
             throw new NullPointerException("redisTemplate could not be null.");
