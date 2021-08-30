@@ -71,7 +71,7 @@ public class BaseExecutor {
         return bean;
     }
 
-    protected <T> void updateMap(Map<String, Object> map, Class<T> clazz) {
+    private <T> void updateMap(Map<String, Object> map, Class<T> clazz) {
         List<Field> fields = ClazzUtils.getAllFields(clazz);
         Map<String, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(Field::getName, t -> t.getType().getName()));
