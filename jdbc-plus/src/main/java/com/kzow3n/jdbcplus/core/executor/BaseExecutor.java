@@ -115,13 +115,20 @@ public class BaseExecutor {
             //TINYINT会转成Integer
             else if (obj instanceof Integer) {
                 String className = fieldMap.get(key);
-                if ("java.lang.Boolean".equals(className)) {
-                    if ((Integer)obj == 0) {
-                        entry.setValue(false);
-                    }
-                    else {
-                        entry.setValue(true);
-                    }
+                switch (className) {
+                    default:
+                        break;
+                    case "java.lang.Boolean":
+                        if ((Integer)obj == 0) {
+                            entry.setValue(false);
+                        }
+                        else {
+                            entry.setValue(true);
+                        }
+                        break;
+                    case "java.lang.Long":
+                        entry.setValue(((Integer) obj).longValue());
+                        break;
                 }
             }
         }
