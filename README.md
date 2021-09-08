@@ -6,5 +6,5 @@
 目前仅支持Mysql</br></br>
 作者：kzow3n，QQ邮箱：442764882@qq.com</br>
 API站点：http://ivublazor.top:8083/</br>
-Maven仓库地址：https://mvnrepository.com/artifact/io.github.kmp5/sqlrunner-plus</br>
+Maven仓库地址：https://mvnrepository.com/artifact/io.github.kmp5/linked-mybatis</br>
 
