@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kzow3n.jdbcplus.core.wrapper.LinkedQueryWrapper;
 import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -18,26 +20,38 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class BaseLinkedQueryExecutor extends BaseExecutor {
 
-    protected long selectCount(LinkedQueryWrapper linkedQueryWrapper) {
+    protected long selectCount(LinkedQueryWrapper linkedQueryWrapper, boolean blnLimit) {
         checkExecutorValid();
         linkedQueryWrapper.formatSql();
+        StringBuilder fullSqlBuilder = new StringBuilder();
+        List<String> groupColumns = linkedQueryWrapper.getGroupColumns();
         String limit = linkedQueryWrapper.getLimit();
-        String sqlCount =
-                String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount")
-                + limit;
+        boolean blnAppendLimit = blnLimit && StringUtils.isNotBlank(limit);
+        if (CollectionUtils.isEmpty(groupColumns) && !blnAppendLimit) {
+            fullSqlBuilder.append(String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount"));
+        }
+        else {
+            StringBuilder baseSqlBuilder = new StringBuilder();
+            baseSqlBuilder.append(linkedQueryWrapper.getBaseSql());
+            if (blnAppendLimit) {
+                baseSqlBuilder.append(limit);
+            }
+            fullSqlBuilder.append(String.format("select count(1) selectCount from (%s) t", baseSqlBuilder));
+        }
+        String sql = fullSqlBuilder.toString();
         List<Object> args = linkedQueryWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
         Map<String, Object> map;
         long count = 0L;
         if (cacheable) {
-            String cacheKey = getCacheKey(sqlCount, args);
+            String cacheKey = getCacheKey(sql, args);
             if (redisTemplate.hasKey(cacheKey)) {
                 log.info("get cache from redis.");
                 return Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(cacheKey)).toString());
             }
-            log.info(sqlCount);
+            log.info(sql);
             try {
-                map = sqlRunner.selectOne(sqlCount, args.toArray());
+                map = sqlRunner.selectOne(sql, args.toArray());
                 count = Long.parseLong(map.get("selectCount").toString());
                 doCache(cacheKey, count);
             } catch (SQLException sqlException) {
@@ -45,9 +59,9 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             }
         }
         else {
-            log.info(sqlCount);
+            log.info(sql);
             try {
-                map = sqlRunner.selectOne(sqlCount, args.toArray());
+                map = sqlRunner.selectOne(sql, args.toArray());
                 count = Long.parseLong(map.get("selectCount").toString());
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
@@ -59,9 +73,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
     protected List<Map<String, Object>> selectList(LinkedQueryWrapper linkedQueryWrapper) {
         checkExecutorValid();
         linkedQueryWrapper.formatSql();
-        String sql = linkedQueryWrapper.getSql()
-                + linkedQueryWrapper.getOrderBy().toString()
-                + linkedQueryWrapper.getLimit();
+        String sql = linkedQueryWrapper.getFullSql();
         List<Object> args = linkedQueryWrapper.getArgs();
 
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
@@ -94,14 +106,13 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
     protected <T> List<Map<String, Object>> selectPage(LinkedQueryWrapper linkedQueryWrapper, Page<T> page, long pageIndex, long pageSize) {
         checkExecutorValid();
         linkedQueryWrapper.formatSql();
-        linkedQueryWrapper.setLimit("");
-        long total = selectCount(linkedQueryWrapper);
+        long total = selectCount(linkedQueryWrapper, false);
         long pages = total % pageSize > 0 ? (total / pageSize) + 1L : total / pageSize;
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
 
-        String sql = linkedQueryWrapper.getSql()
-                + linkedQueryWrapper.getOrderBy().toString()
-                + String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
+        String sql = linkedQueryWrapper.getBaseSql() +
+                linkedQueryWrapper.getOrderBy().toString() +
+                String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
         List<Object> args = linkedQueryWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
         List<Map<String, Object>> mapList = null;

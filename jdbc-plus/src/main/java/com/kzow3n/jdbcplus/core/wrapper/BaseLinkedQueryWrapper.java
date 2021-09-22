@@ -6,7 +6,6 @@ import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ClazzUtils;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -14,6 +13,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -25,19 +25,19 @@ import java.util.stream.Collectors;
  * @since 2021/8/4
  */
 @Data
-@Slf4j
 public class BaseLinkedQueryWrapper {
 
     protected List<TableInfo> tableInfos;
     protected List<TableInfo> selectAllTableInfos;
     protected List<TableInfo> parentTableInfos;
-    protected StringBuffer sqlBuilder;
+    protected StringBuilder sqlBuilder;
     protected List<ColumnInfo> columnInfos;
     protected List<String> groupColumns;
     protected String having;
-    protected StringBuffer orderBy;
+    protected StringBuilder orderBy;
     protected String limit;
-    protected String sql;
+    protected String baseSql;
+    protected String fullSql;
     protected List<Object> args;
     protected boolean blnFormatSql;
     protected boolean blnDistinct;
@@ -49,14 +49,11 @@ public class BaseLinkedQueryWrapper {
         tableInfos = new ArrayList<>();
         selectAllTableInfos = new ArrayList<>();
         parentTableInfos = new ArrayList<>();
-        sqlBuilder = new StringBuffer();
-        columnInfos = new ArrayList<>();
-        groupColumns = new ArrayList<>();
-        having = "";
-        orderBy = new StringBuffer();
-        limit = "";
-        sql = "";
-        args = new ArrayList<>();
+        sqlBuilder = new StringBuilder();
+        columnInfos = new LinkedList<>();
+        groupColumns = new LinkedList<>();
+        orderBy = new StringBuilder();
+        args = new LinkedList<>();
         blnFormatSql = false;
         blnDistinct = false;
         blnWhere = false;
@@ -179,10 +176,10 @@ public class BaseLinkedQueryWrapper {
         args.addAll(linkedQueryWrapper.getArgs());
         if (blnDistinct) {
             blnDistinct = false;
-            sqlBuilder.append("select distinct %s from ").append(String.format("(%s) %s ", linkedQueryWrapper.getSql(), tableId));
+            sqlBuilder.append("select distinct %s from ").append(String.format("(%s) %s ", linkedQueryWrapper.getFullSql(), tableId));
         }
         else {
-            sqlBuilder.append("select %s from ").append(String.format("(%s) %s ", linkedQueryWrapper.getSql(), tableId));
+            sqlBuilder.append("select %s from ").append(String.format("(%s) %s ", linkedQueryWrapper.getFullSql(), tableId));
         }
     }
 
@@ -204,7 +201,7 @@ public class BaseLinkedQueryWrapper {
         LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
         consumer.accept(linkedQueryWrapper);
         linkedQueryWrapper.formatSql();
-        sqlBuilder.append(String.format("%s (%s) %s ", joinType, linkedQueryWrapper.getSql(), tableId));
+        sqlBuilder.append(String.format("%s (%s) %s ", joinType, linkedQueryWrapper.getFullSql(), tableId));
     }
 
     protected void appendOn(String tableId1, String column1, String tableId2, String column2) {
@@ -216,16 +213,23 @@ public class BaseLinkedQueryWrapper {
             return;
         }
         blnFormatSql = true;
-        sql = sqlBuilder.toString();
+        StringBuilder baseSqlBuilder = new StringBuilder();
+        baseSqlBuilder.append(sqlBuilder.toString());
         if (!CollectionUtils.isEmpty(groupColumns)) {
-            sql += String.format("group by %s ", String.join(",", groupColumns));
+            baseSqlBuilder.append(String.format("group by %s ", String.join(",", groupColumns)));
+            if (StringUtils.isNotBlank(having)) {
+                baseSqlBuilder.append(having);
+            }
         }
-        if (StringUtils.isNotBlank(having)) {
-            sql += String.format("having %s ", having);
-        }
-
         String columnString = formatColumns();
-        sql = String.format(sql, columnString);
+        baseSql = String.format(baseSqlBuilder.toString(), columnString);
+
+        StringBuilder fullSqlBuilder = new StringBuilder();
+        fullSqlBuilder.append(baseSql).append(orderBy.toString());
+        if (StringUtils.isNotBlank(limit)) {
+            fullSqlBuilder.append(limit);
+        }
+        fullSql = fullSqlBuilder.toString();
     }
 
     protected String formatColumns() {
@@ -338,7 +342,7 @@ public class BaseLinkedQueryWrapper {
             LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
             consumer.accept(linkedQueryWrapper);
             linkedQueryWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s = (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            sqlBuilder.append(String.format("%s.%s = (%s) ", tableId, column, linkedQueryWrapper.getFullSql()));
             args.addAll(linkedQueryWrapper.getArgs());
         }
     }
@@ -364,7 +368,7 @@ public class BaseLinkedQueryWrapper {
             LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
             consumer.accept(linkedQueryWrapper);
             linkedQueryWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s <> (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            sqlBuilder.append(String.format("%s.%s <> (%s) ", tableId, column, linkedQueryWrapper.getFullSql()));
             args.addAll(linkedQueryWrapper.getArgs());
         }
     }
@@ -395,7 +399,7 @@ public class BaseLinkedQueryWrapper {
             LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
             consumer.accept(linkedQueryWrapper);
             linkedQueryWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s %s (%s) ", tableId, column, compareType, linkedQueryWrapper.getSql()));
+            sqlBuilder.append(String.format("%s.%s %s (%s) ", tableId, column, compareType, linkedQueryWrapper.getFullSql()));
             args.addAll(linkedQueryWrapper.getArgs());
         }
     }
@@ -458,7 +462,7 @@ public class BaseLinkedQueryWrapper {
             LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
             consumer.accept(linkedQueryWrapper);
             linkedQueryWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            sqlBuilder.append(String.format("%s.%s in (%s) ", tableId, column, linkedQueryWrapper.getFullSql()));
             this.args.addAll(linkedQueryWrapper.getArgs());
         }
     }
@@ -477,7 +481,7 @@ public class BaseLinkedQueryWrapper {
             LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
             consumer.accept(linkedQueryWrapper);
             linkedQueryWrapper.formatSql();
-            sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, linkedQueryWrapper.getSql()));
+            sqlBuilder.append(String.format("%s.%s not in (%s) ", tableId, column, linkedQueryWrapper.getFullSql()));
             this.args.addAll(linkedQueryWrapper.getArgs());
         }
     }
@@ -496,7 +500,7 @@ public class BaseLinkedQueryWrapper {
         linkedQueryWrapper.setParentTableInfos(this.tableInfos);
         consumer.accept(linkedQueryWrapper);
         linkedQueryWrapper.formatSql();
-        sqlBuilder.append(String.format("exists(%s) ", linkedQueryWrapper.getSql()));
+        sqlBuilder.append(String.format("exists(%s) ", linkedQueryWrapper.getFullSql()));
         this.args.addAll(linkedQueryWrapper.getArgs());
     }
 
@@ -514,7 +518,7 @@ public class BaseLinkedQueryWrapper {
         linkedQueryWrapper.setParentTableInfos(this.tableInfos);
         consumer.accept(linkedQueryWrapper);
         linkedQueryWrapper.formatSql();
-        sqlBuilder.append(String.format("not exists(%s) ", linkedQueryWrapper.getSql()));
+        sqlBuilder.append(String.format("not exists(%s) ", linkedQueryWrapper.getFullSql()));
         this.args.addAll(linkedQueryWrapper.getArgs());
     }
 
@@ -561,7 +565,7 @@ public class BaseLinkedQueryWrapper {
         if (args != null) {
             this.args.addAll(Arrays.asList(args));
         }
-        having = sql;
+        having = String.format("having %s ", sql);
     }
 
     protected void appendHaving(Consumer<LinkedQueryWrapper> consumer) {
@@ -569,7 +573,7 @@ public class BaseLinkedQueryWrapper {
         linkedQueryWrapper.setTableInfos(this.tableInfos);
         consumer.accept(linkedQueryWrapper);
         linkedQueryWrapper.formatSql();
-        String having = linkedQueryWrapper.getSql();
+        String having = linkedQueryWrapper.getFullSql();
         this.having = having.replaceFirst("where", "having");
     }
 

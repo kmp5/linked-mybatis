@@ -26,7 +26,8 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     }
 
     public void initSql() {
-        sql = "";
+        baseSql = null;
+        fullSql = null;
         blnFormatSql = false;
     }
 

@@ -64,27 +64,37 @@ public class BaseExecutor {
     }
 
     protected <T> List<T> mapsToBeans(List<Map<String, Object>> maps, Class<T> clazz) {
-        return CollectionUtils.isEmpty(maps) ? Collections.emptyList() : maps.stream().map((e) -> mapToBean(e, clazz)).collect(Collectors.toList());
+        List<Field> fields = ClazzUtils.getAllFields(clazz);
+        Map<String, String> fieldMap = fields.stream()
+                .collect(Collectors.toMap(Field::getName, t -> t.getType().getName()));
+        return CollectionUtils.isEmpty(maps) ? Collections.emptyList() : maps.stream().map((e) -> mapToBean(e, clazz, fieldMap)).collect(Collectors.toList());
     }
 
-    protected <T> T mapToBean(Map<String, Object> map, Class<T> clazz) {
-        updateMap(map, clazz);
+    protected <T> T mapToBean(Map<String, Object> map, Class<T> clazz, Map<String, String> fieldMap) {
+        updateMap(map, fieldMap);
         T bean = ClassUtils.newInstance(clazz);
         BeanMap.create(bean).putAll(map);
         return bean;
     }
 
-    private <T> void updateMap(Map<String, Object> map, Class<T> clazz) {
+    protected <T> T mapToBean(Map<String, Object> map, Class<T> clazz) {
         List<Field> fields = ClazzUtils.getAllFields(clazz);
         Map<String, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(Field::getName, t -> t.getType().getName()));
+        updateMap(map, fieldMap);
+        T bean = ClassUtils.newInstance(clazz);
+        BeanMap.create(bean).putAll(map);
+        return bean;
+    }
+
+    private <T> void updateMap(Map<String, Object> map, Map<String, String> fieldMap) {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String key = entry.getKey();
             Object obj = entry.getValue();
             if (obj == null) {
                 continue;
             }
-            //处理java.lang.Double
+            //处理Double
             if (obj instanceof Double) {
                 String className = fieldMap.get(key);
                 switch (className) {
@@ -95,7 +105,7 @@ public class BaseExecutor {
                         break;
                 }
             }
-            //java.sql.Timestamp格式特殊处理
+            //处理Timestamp
             if (obj instanceof Timestamp) {
                 String className = fieldMap.get(key);
                 switch (className) {
@@ -112,7 +122,7 @@ public class BaseExecutor {
                         break;
                 }
             }
-            //TINYINT会转成Integer
+            //处理Integer
             else if (obj instanceof Integer) {
                 String className = fieldMap.get(key);
                 switch (className) {

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kzow3n.jdbcplus.core.wrapper.LinkedQueryWrapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -27,36 +26,8 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
         this.sqlSession = sqlSession;
     }
 
-    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, RedisTemplate<String, Object> redisTemplate, Boolean cacheable) {
-        this.sqlSessionFactory = sqlSessionFactory;
-        this.redisTemplate = redisTemplate;
-        this.cacheable = cacheable;
-    }
-
-    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable) {
-        this.sqlSessionFactory = sqlSessionFactory;
-        this.sqlSession = sqlSession;
-        this.redisTemplate = redisTemplate;
-        this.cacheable = cacheable;
-    }
-
-    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long cacheTimeout) {
-        this.sqlSessionFactory = sqlSessionFactory;
-        this.redisTemplate = redisTemplate;
-        this.cacheable = cacheable;
-        this.cacheTimeout = cacheTimeout;
-    }
-
-    public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate, Boolean cacheable, Long cacheTimeout) {
-        this.sqlSessionFactory = sqlSessionFactory;
-        this.sqlSession = sqlSession;
-        this.redisTemplate = redisTemplate;
-        this.cacheable = cacheable;
-        this.cacheTimeout = cacheTimeout;
-    }
-
     public long forCount(LinkedQueryWrapper linkedQueryWrapper) {
-        return selectCount(linkedQueryWrapper);
+        return selectCount(linkedQueryWrapper, true);
     }
 
     public List<Map<String, Object>> forMaps(LinkedQueryWrapper linkedQueryWrapper) {

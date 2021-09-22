@@ -21,18 +21,9 @@ public class ProcedureExecutor extends BaseProcedureExecutor {
         this.sqlSessionFactory = sqlSessionFactory;
     }
 
-    public ProcedureExecutor(SqlSession sqlSession) {
-        this.sqlSession = sqlSession;
-    }
-
-    public ProcedureExecutor(SqlSessionFactory sqlSessionFactory, RedisTemplate<String, Object> redisTemplate) {
+    public ProcedureExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession) {
         this.sqlSessionFactory = sqlSessionFactory;
-        this.redisTemplate = redisTemplate;
-    }
-
-    public ProcedureExecutor(SqlSession sqlSession, RedisTemplate<String, Object> redisTemplate) {
         this.sqlSession = sqlSession;
-        this.redisTemplate = redisTemplate;
     }
 
     public List<Map<String, Object>> forMaps(String proName, @Nullable Object... args) {
