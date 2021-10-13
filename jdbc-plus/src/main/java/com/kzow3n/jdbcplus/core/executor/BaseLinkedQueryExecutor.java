@@ -1,6 +1,7 @@
 package com.kzow3n.jdbcplus.core.executor;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.kzow3n.jdbcplus.core.jdbc.DbTypeEnum;
 import com.kzow3n.jdbcplus.core.wrapper.LinkedQueryWrapper;
 import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
 import lombok.extern.slf4j.Slf4j;
@@ -106,15 +107,40 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
     protected <T> List<Map<String, Object>> selectPage(LinkedQueryWrapper linkedQueryWrapper, Page<T> page, long pageIndex, long pageSize) {
         checkExecutorValid();
         linkedQueryWrapper.formatSql();
+
         long total = selectCount(linkedQueryWrapper, false);
         long pages = total % pageSize > 0 ? (total / pageSize) + 1L : total / pageSize;
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
 
-        String sql = linkedQueryWrapper.getBaseSql() +
-                linkedQueryWrapper.getOrderBy().toString() +
-                String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
-        List<Object> args = linkedQueryWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
+        DbTypeEnum dbTypeEnum = sqlRunner.getDbTypeEnum();
+        String sql;
+        switch (dbTypeEnum) {
+            default:
+                sql = linkedQueryWrapper.getBaseSql() +
+                        linkedQueryWrapper.getOrderBy().toString() +
+                        String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
+                break;
+            case DM:
+                sql = linkedQueryWrapper.getBaseSql() +
+                        linkedQueryWrapper.getOrderBy().toString();
+                sql = String.format("SELECT * FROM (SELECT TMP.*, ROWNUM ROW_ID FROM (%s) TMP WHERE ROWNUM <= %d) WHERE ROW_ID > %d",
+                        sql, pageIndex * pageSize, (pageIndex - 1L) * pageSize);
+                break;
+            case SQL_SERVER:
+                String orderBy = linkedQueryWrapper.getOrderBy().toString();
+                if (StringUtils.isBlank(orderBy)) {
+                    orderBy = "ORDER BY CURRENT_TIMESTAMP";
+                }
+                long start = 1L + (pageIndex - 1L) * pageSize;
+                long end = pageIndex * pageSize;
+                sql = linkedQueryWrapper.getBaseSql().replaceFirst("select ", "");
+                sql = String.format("WITH selectTemp AS (SELECT TOP 100 PERCENT ROW_NUMBER() OVER (%s) as __row_number__, %s) SELECT * FROM selectTemp WHERE __row_number__ BETWEEN %d AND %d ORDER BY __row_number__",
+                        orderBy, sql, start, end);
+                break;
+        }
+
+        List<Object> args = linkedQueryWrapper.getArgs();
         List<Map<String, Object>> mapList = null;
         if (cacheable) {
             String cacheKey = getCacheKey(sql, args);

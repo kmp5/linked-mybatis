@@ -1,5 +1,6 @@
 package com.kzow3n.jdbcplus.core.jdbc;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.jdbc.Null;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -15,16 +16,24 @@ import java.util.*;
  * @author owen
  * @since 2021/8/13
  */
+@Slf4j
 public class MySqlRunner {
     protected SqlSession sqlSession;
     private final SqlSessionFactory sqlSessionFactory;
     private final TypeHandlerRegistry typeHandlerRegistry;
     private int queryTimeout = 60;
+    private DbTypeEnum dbTypeEnum = DbTypeEnum.DEFAULT;
+    private boolean blnOwnSqlSession = false;
 
     public MySqlRunner(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession) {
         this.sqlSessionFactory = sqlSessionFactory;
         this.sqlSession = sqlSession;
         this.typeHandlerRegistry = new TypeHandlerRegistry();
+        try {
+            initSqlSession();
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
     }
 
     public MySqlRunner(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession, int queryTimeout) {
@@ -32,6 +41,38 @@ public class MySqlRunner {
         this.sqlSession = sqlSession;
         this.queryTimeout = queryTimeout;
         this.typeHandlerRegistry = new TypeHandlerRegistry();
+        try {
+            initSqlSession();
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
+        }
+    }
+
+    private void initSqlSession() throws SQLException {
+        if (sqlSession == null) {
+            this.sqlSession = sqlSessionFactory.openSession();
+            blnOwnSqlSession = true;
+        }
+        else {
+            Connection connection = sqlSession.getConnection();
+            if (connection.isClosed()) {
+                this.sqlSession = sqlSessionFactory.openSession();
+                blnOwnSqlSession = true;
+            }
+        }
+        Connection connection = this.sqlSession.getConnection();
+        DatabaseMetaData md = connection.getMetaData();
+        String dbType = md.getDatabaseProductName().toLowerCase();
+        if (dbType.contains("dm")) {
+            dbTypeEnum = DbTypeEnum.DM;
+        }
+        else if (dbType.contains("sqlserver") || dbType.contains("sql server")) {
+            dbTypeEnum = DbTypeEnum.SQL_SERVER;
+        }
+    }
+
+    public DbTypeEnum getDbTypeEnum() {
+        return dbTypeEnum;
     }
 
     public Map<String, Object> selectOne(String sql, Object... args) throws SQLException {
@@ -45,37 +86,8 @@ public class MySqlRunner {
 
     public List<Map<String, Object>> selectAll(String sql, Object... args) throws SQLException {
         List<Map<String, Object>> result;
-        if (sqlSession != null) {
-            Connection connection = sqlSession.getConnection();
-            if (!connection.isClosed()) {
-                PreparedStatement ps = connection.prepareStatement(sql);
-                ps.setQueryTimeout(queryTimeout);
-                try {
-                    this.setParameters(ps, args);
-                    ResultSet rs = ps.executeQuery();
-                    result = this.getResults(rs);
-                }
-                finally {
-                    try {
-                        ps.close();
-                    } catch (SQLException ignored) {
-                    }
-                }
-            }
-            else {
-                result = selectAllBySqlSessionFactory(sqlSessionFactory, sql, args);
-            }
-        }
-        else {
-            result = selectAllBySqlSessionFactory(sqlSessionFactory, sql, args);
-        }
-        return result;
-    }
-
-    private List<Map<String, Object>> selectAllBySqlSessionFactory(SqlSessionFactory sqlSessionFactory, String sql, Object... args) throws SQLException {
-        List<Map<String, Object>> result;
-        SqlSession sqlSession = sqlSessionFactory.openSession();
-        PreparedStatement ps = sqlSession.getConnection().prepareStatement(sql);
+        Connection connection = sqlSession.getConnection();
+        PreparedStatement ps = connection.prepareStatement(sql);
         ps.setQueryTimeout(queryTimeout);
         try {
             this.setParameters(ps, args);
@@ -84,9 +96,11 @@ public class MySqlRunner {
         }
         finally {
             try {
+                if (blnOwnSqlSession) {
+                    connection.close();
+                    sqlSession.close();
+                }
                 ps.close();
-                sqlSession.commit();
-                sqlSession.close();
             } catch (SQLException ignored) {
             }
         }
