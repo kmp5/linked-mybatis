@@ -18,6 +18,7 @@ public class LinkedQueryExecutorBuilder {
     private boolean cacheable = false;
     private long cacheTimeout = 60L;
     private int queryTimeout = 60;
+    protected boolean columnCaseInsensitive = false;
 
     public LinkedQueryExecutorBuilder(SqlSessionFactory sqlSessionFactory) {
         this.sqlSessionFactory = sqlSessionFactory;
@@ -45,6 +46,11 @@ public class LinkedQueryExecutorBuilder {
 
     public LinkedQueryExecutorBuilder cacheTimeout(long cacheTimeout) {
         this.cacheTimeout = cacheTimeout;
+        return this;
+    }
+
+    public LinkedQueryExecutorBuilder columnCaseInsensitive(boolean columnCaseInsensitive) {
+        this.columnCaseInsensitive = columnCaseInsensitive;
         return this;
     }
 

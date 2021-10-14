@@ -49,6 +49,7 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
+
         return mapsToBeans(mapList, clazz);
     }
 

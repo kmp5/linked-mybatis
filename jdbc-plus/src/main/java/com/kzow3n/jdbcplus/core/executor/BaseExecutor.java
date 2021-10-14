@@ -36,6 +36,7 @@ public class BaseExecutor {
     protected Boolean cacheable = false;
     protected Long cacheTimeout = 60L;
     protected Integer queryTimeout = 60;
+    protected boolean columnCaseInsensitive = false;
 
     protected boolean mapUnderscoreToCamelCase = true;
 
@@ -96,6 +97,15 @@ public class BaseExecutor {
     }
 
     private <T> void updateMap(Map<String, Object> map, Map<String, String> fieldMap) {
+        if (columnCaseInsensitive) {
+            for (Map.Entry<String, String> entry : fieldMap.entrySet()) {
+                String key = entry.getKey();
+                String upperCaseKey = key.toUpperCase();
+                if (map.containsKey(upperCaseKey)) {
+                    map.put(key, map.remove(upperCaseKey));
+                }
+            }
+        }
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String key = entry.getKey();
             Object obj = entry.getValue();
