@@ -24,7 +24,7 @@ public class ClazzUtils {
     public static String getTableName(Class<?> clazz) {
         TableName annotation = clazz.getAnnotation(TableName.class);
         if (annotation == null) {
-            return clazz.getName();
+            return clazz.getSimpleName();
         }
         return annotation.value();
     }
