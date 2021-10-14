@@ -2,7 +2,6 @@ package com.kzow3n.jdbcplus.core.executor;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 

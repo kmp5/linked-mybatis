@@ -36,6 +36,7 @@ public class BaseExecutor {
     protected Boolean cacheable = false;
     protected Long cacheTimeout = 60L;
     protected Integer queryTimeout = 60;
+
     protected boolean mapUnderscoreToCamelCase = true;
 
     protected void checkExecutorValid() {

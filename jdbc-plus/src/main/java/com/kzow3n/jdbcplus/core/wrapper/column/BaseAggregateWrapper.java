@@ -16,6 +16,7 @@ import java.util.List;
 public class BaseAggregateWrapper {
     protected List<TableInfo> tableInfos;
     protected String column;
+
     protected Boolean mapUnderscoreToCamelCase = true;
 
     private void init() {
