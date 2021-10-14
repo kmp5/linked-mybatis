@@ -19,11 +19,13 @@ public class ProcedureExecutor extends BaseProcedureExecutor {
 
     public ProcedureExecutor(SqlSessionFactory sqlSessionFactory) {
         this.sqlSessionFactory = sqlSessionFactory;
+        initConfiguration();
     }
 
     public ProcedureExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession) {
         this.sqlSessionFactory = sqlSessionFactory;
         this.sqlSession = sqlSession;
+        initConfiguration();
     }
 
     public List<Map<String, Object>> forMaps(String proName, @Nullable Object... args) {

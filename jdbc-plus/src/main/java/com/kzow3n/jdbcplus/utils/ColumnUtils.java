@@ -81,16 +81,16 @@ public class ColumnUtils {
         return ReflectionUtils.findField(aClass, fieldName);
     }
 
-    public static String getColumn(TableInfo tableInfo, Field field) {
+    public static String getColumn(TableInfo tableInfo, Field field, boolean mapUnderscoreToCamelCase) {
         if (tableInfo.getTableClass() != null) {
-            return getTableColumnByField(field);
+            return getTableColumnByField(field, mapUnderscoreToCamelCase);
         }
         else {
             return getBeanColumnByField(field);
         }
     }
 
-    public static String getTableColumnByField(Field field) {
+    public static String getTableColumnByField(Field field, boolean mapUnderscoreToCamelCase) {
         String tableColumn = null;
         TableField annotation = field.getAnnotation(TableField.class);
         if (annotation != null) {
@@ -103,7 +103,12 @@ public class ColumnUtils {
             }
         }
         if (tableColumn == null) {
-            tableColumn = field.getName();
+            if (mapUnderscoreToCamelCase) {
+                tableColumn = MyStringUtils.mapUnderscoreToCamelCase(field.getName());
+            }
+            else {
+                tableColumn = field.getName();
+            }
         }
         return tableColumn;
     }

@@ -19,11 +19,13 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
 
     public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory) {
         this.sqlSessionFactory = sqlSessionFactory;
+        initConfiguration();
     }
 
     public LinkedQueryExecutor(SqlSessionFactory sqlSessionFactory, SqlSession sqlSession) {
         this.sqlSessionFactory = sqlSessionFactory;
         this.sqlSession = sqlSession;
+        initConfiguration();
     }
 
     public long forCount(LinkedQueryWrapper linkedQueryWrapper) {

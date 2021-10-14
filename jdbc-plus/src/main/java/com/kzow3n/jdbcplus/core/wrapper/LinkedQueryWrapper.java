@@ -5,6 +5,7 @@ import com.kzow3n.jdbcplus.core.wrapper.column.AggregateWrapper;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.session.Configuration;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 
@@ -23,6 +24,11 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
 
     public LinkedQueryWrapper() {
         init();
+    }
+
+    public LinkedQueryWrapper(Configuration configuration) {
+        init();
+        initConfiguration(configuration);
     }
 
     public void initSql() {
@@ -139,9 +145,9 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         String tableId1 = tableInfo1.getTableId();
         String tableId2 = tableInfo2.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1, mapUnderscoreToCamelCase);
         Field field2 = ColumnUtils.getField(fn2);
-        String column2 = ColumnUtils.getColumn(tableInfo2, field2);
+        String column2 = ColumnUtils.getColumn(tableInfo2, field2, mapUnderscoreToCamelCase);
         appendOn(tableId1, column1, tableId2, column2);
         return this;
     }
@@ -152,7 +158,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         String tableId1 = tableInfo1.getTableId();
         String tableId2 = tableInfo2.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1, mapUnderscoreToCamelCase);
         appendOn(tableId1, column1, tableId2, column2);
         return this;
     }
@@ -163,7 +169,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         String tableId1 = tableInfo1.getTableId();
         String tableId2 = tableInfo2.getTableId();
         Field field2 = ColumnUtils.getField(fn2);
-        String column2 = ColumnUtils.getColumn(tableInfo2, field2);
+        String column2 = ColumnUtils.getColumn(tableInfo2, field2, mapUnderscoreToCamelCase);
         appendOn(tableId1, column1, tableId2, column2);
         return this;
     }
@@ -388,7 +394,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         isNull(tableId, column);
         return this;
     }
@@ -404,7 +410,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         isNotNull(tableId, column);
         return this;
     }
@@ -420,7 +426,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         eq(tableId, column, arg, null);
         return this;
     }
@@ -435,8 +441,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         eq(tableId, column, arg, null);
@@ -447,7 +452,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         eq(tableId, column, null, consumer);
         return this;
     }
@@ -462,8 +467,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper eq(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         eq(tableId, column, null, consumer2);
@@ -474,10 +478,10 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         String tableId1 = tableInfo1.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1, mapUnderscoreToCamelCase);
         Field field2 = ColumnUtils.getField(fn2);
         TableInfo tableInfo2 = getTableInfoById(parentTableInfos, tableId2);
-        String column2 = ColumnUtils.getColumn(tableInfo2, field2);
+        String column2 = ColumnUtils.getColumn(tableInfo2, field2, mapUnderscoreToCamelCase);
         eq(tableId1, column1, tableId2, column2);
         return this;
     }
@@ -486,7 +490,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo1 = getTableInfoByIndex(tableIndex1);
         String tableId1 = tableInfo1.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String column1 = ColumnUtils.getColumn(tableInfo1, field1);
+        String column1 = ColumnUtils.getColumn(tableInfo1, field1, mapUnderscoreToCamelCase);
         eq(tableId1, column1, tableId2, column2);
         return this;
     }
@@ -495,7 +499,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         ne(tableId, column, arg, null);
         return this;
     }
@@ -510,8 +514,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         ne(tableId, column, arg, null);
@@ -522,7 +525,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         ne(tableId, column, null, consumer);
         return this;
     }
@@ -537,8 +540,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper ne(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         ne(tableId, column, null, consumer2);
@@ -552,7 +554,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         gt(tableId, column, arg, null);
         return this;
     }
@@ -570,8 +572,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         gt(tableId, column, arg, null);
@@ -582,7 +583,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         gt(tableId, column, null, consumer);
         return this;
     }
@@ -597,8 +598,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper gt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         gt(tableId, column, null, consumer2);
@@ -612,7 +612,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         ge(tableId, column, arg, null);
         return this;
     }
@@ -630,8 +630,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         ge(tableId, column, arg, null);
@@ -642,7 +641,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         ge(tableId, column, null, consumer);
         return this;
     }
@@ -657,8 +656,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper ge(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         ge(tableId, column, null, consumer2);
@@ -672,7 +670,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         lt(tableId, column, arg, null);
         return this;
     }
@@ -690,8 +688,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         lt(tableId, column, arg, null);
@@ -702,7 +699,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         lt(tableId, column, null, consumer);
         return this;
     }
@@ -717,8 +714,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper lt(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         lt(tableId, column, null, consumer2);
@@ -732,7 +728,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         le(tableId, column, arg, null);
         return this;
     }
@@ -750,8 +746,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Object arg) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         le(tableId, column, arg, null);
@@ -762,7 +757,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         le(tableId, column, null, consumer);
         return this;
     }
@@ -777,8 +772,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     public LinkedQueryWrapper le(Integer tableIndex, Consumer<AggregateWrapper> consumer, Consumer<LinkedQueryWrapper> consumer2) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         le(tableId, column, null, consumer2);
@@ -792,7 +786,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         like(tableId, column, arg);
         return this;
     }
@@ -814,7 +808,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         likeLeft(tableId, column, arg);
         return this;
     }
@@ -836,7 +830,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         likeRight(tableId, column, arg);
         return this;
     }
@@ -858,7 +852,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         notLike(tableId, column, arg);
         return this;
     }
@@ -880,7 +874,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         between(tableId, column, arg1, arg2);
         return this;
     }
@@ -901,8 +895,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         between(tableId, column, arg1, arg2);
@@ -916,7 +909,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         notBetween(tableId, column, arg1, arg2);
         return this;
     }
@@ -937,8 +930,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         }
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
-        AggregateWrapper aggregateWrapper = new AggregateWrapper();
-        aggregateWrapper.setTableInfos(tableInfos);
+        AggregateWrapper aggregateWrapper = buildAggregateWrapper();
         consumer.accept(aggregateWrapper);
         String column = aggregateWrapper.getColumn();
         notBetween(tableId, column, arg1, arg2);
@@ -952,7 +944,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         List<Object> list = Arrays.asList(args);
         in(tableId, column, list, null);
         return this;
@@ -976,7 +968,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         in(tableId, column, args, null);
         return this;
     }
@@ -995,7 +987,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         in(tableId, column, null, consumer);
         return this;
     }
@@ -1014,7 +1006,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         List<Object> list = Arrays.asList(args);
         notIn(tableId, column, list, null);
         return this;
@@ -1038,7 +1030,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         notIn(tableId, column, args, null);
         return this;
     }
@@ -1057,7 +1049,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         notIn(tableId, column, null, consumer);
         return this;
     }
@@ -1134,7 +1126,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         orderBy(tableId, column, true, false);
         return this;
     }
@@ -1150,7 +1142,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         orderBy(tableId, column, true, true);
         return this;
     }
@@ -1166,7 +1158,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         orderBy(tableId, column, false, false);
         return this;
     }
@@ -1182,7 +1174,7 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         Field field = ColumnUtils.getField(fn);
-        String column = ColumnUtils.getColumn(tableInfo, field);
+        String column = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         orderBy(tableId, column, false, true);
         return this;
     }

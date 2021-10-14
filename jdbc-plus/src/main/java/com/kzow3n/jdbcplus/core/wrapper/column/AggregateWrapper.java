@@ -17,7 +17,7 @@ public class AggregateWrapper extends BaseAggregateWrapper {
     public <K> void count(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field = ColumnUtils.getField(fn);
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         column = String.format("count(%s.%s)", tableInfo.getTableId(), tableColumn);
     }
 
@@ -29,7 +29,7 @@ public class AggregateWrapper extends BaseAggregateWrapper {
     public <K> void avg(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field = ColumnUtils.getField(fn);
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         column = String.format("avg(%s.%s)", tableInfo.getTableId(), tableColumn);
     }
 
@@ -41,7 +41,7 @@ public class AggregateWrapper extends BaseAggregateWrapper {
     public <K> void sum(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field = ColumnUtils.getField(fn);
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         column = String.format("sum(%s.%s)", tableInfo.getTableId(), tableColumn);
     }
 
@@ -53,7 +53,7 @@ public class AggregateWrapper extends BaseAggregateWrapper {
     public <K> void max(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field = ColumnUtils.getField(fn);
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         column = String.format("max(%s.%s)", tableInfo.getTableId(), tableColumn);
     }
 
@@ -65,7 +65,7 @@ public class AggregateWrapper extends BaseAggregateWrapper {
     public <K> void min(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field = ColumnUtils.getField(fn);
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         column = String.format("min(%s.%s)", tableInfo.getTableId(), tableColumn);
     }
 
@@ -77,7 +77,7 @@ public class AggregateWrapper extends BaseAggregateWrapper {
     public <K> void groupConcat(Integer tableIndex, SFunction<K, ?> fn) {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field = ColumnUtils.getField(fn);
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         column = String.format("group_concat(%s.%s)", tableInfo.getTableId(), tableColumn);
     }
 

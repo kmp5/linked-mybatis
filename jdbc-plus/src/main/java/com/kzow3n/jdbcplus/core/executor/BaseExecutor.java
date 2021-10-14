@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.ClassUtils;
 import com.kzow3n.jdbcplus.pojo.SqlArg;
 import com.kzow3n.jdbcplus.utils.ClazzUtils;
 import lombok.Data;
+import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.cglib.beans.BeanMap;
@@ -35,6 +36,7 @@ public class BaseExecutor {
     protected Boolean cacheable = false;
     protected Long cacheTimeout = 60L;
     protected Integer queryTimeout = 60;
+    protected boolean mapUnderscoreToCamelCase = true;
 
     protected void checkExecutorValid() {
         if (sqlSessionFactory == null) {
@@ -43,6 +45,11 @@ public class BaseExecutor {
         if (cacheable && redisTemplate == null) {
             throw new NullPointerException("redisTemplate could not be null.");
         }
+    }
+
+    protected void initConfiguration() {
+        Configuration configuration = sqlSessionFactory.getConfiguration();
+        mapUnderscoreToCamelCase = configuration.isMapUnderscoreToCamelCase();
     }
 
     protected String getCacheKey(String sql, List<Object> args) {

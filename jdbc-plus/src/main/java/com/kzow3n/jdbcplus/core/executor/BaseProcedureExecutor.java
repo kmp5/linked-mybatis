@@ -50,7 +50,7 @@ public class BaseProcedureExecutor extends BaseExecutor {
     protected void updateMapsKeys(List<Map<String, Object>> mapList, Class<?> clazz) {
         List<Field> fields = ClazzUtils.getAllFields(clazz);
         for (Field field : fields) {
-            String tableColumn = ColumnUtils.getTableColumnByField(field);
+            String tableColumn = ColumnUtils.getTableColumnByField(field, mapUnderscoreToCamelCase);
             if (StringUtils.isNotBlank(tableColumn)) {
                 String beanColumn = field.getName();
                 mapList.forEach(map -> {
@@ -63,7 +63,7 @@ public class BaseProcedureExecutor extends BaseExecutor {
     protected void updateMapKeys(Map<String, Object> map, Class<?> clazz) {
         List<Field> fields = ClazzUtils.getAllFields(clazz);
         for (Field field : fields) {
-            String tableColumn = ColumnUtils.getTableColumnByField(field);
+            String tableColumn = ColumnUtils.getTableColumnByField(field, mapUnderscoreToCamelCase);
             if (StringUtils.isNotBlank(tableColumn)) {
                 String beanColumn = field.getName();
                 map.put(beanColumn, map.remove(tableColumn));

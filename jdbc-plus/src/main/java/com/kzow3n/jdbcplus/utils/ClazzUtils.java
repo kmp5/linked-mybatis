@@ -21,10 +21,15 @@ public class ClazzUtils {
         return fields;
     }
 
-    public static String getTableName(Class<?> clazz) {
+    public static String getTableName(Class<?> clazz, boolean mapUnderscoreToCamelCase) {
         TableName annotation = clazz.getAnnotation(TableName.class);
         if (annotation == null) {
-            return clazz.getSimpleName();
+            if (mapUnderscoreToCamelCase) {
+                return MyStringUtils.mapUnderscoreToCamelCase(clazz.getSimpleName());
+            }
+            else {
+                return clazz.getSimpleName();
+            }
         }
         return annotation.value();
     }

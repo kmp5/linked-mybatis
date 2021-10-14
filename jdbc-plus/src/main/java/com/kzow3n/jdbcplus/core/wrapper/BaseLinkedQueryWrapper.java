@@ -1,12 +1,14 @@
 package com.kzow3n.jdbcplus.core.wrapper;
 
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
+import com.kzow3n.jdbcplus.core.wrapper.column.AggregateWrapper;
 import com.kzow3n.jdbcplus.pojo.ColumnInfo;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
 import com.kzow3n.jdbcplus.utils.ClazzUtils;
 import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.session.Configuration;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
@@ -45,6 +47,8 @@ public class BaseLinkedQueryWrapper {
     protected boolean blnOr;
     protected boolean blnOpenBracket;
 
+    protected boolean mapUnderscoreToCamelCase = true;
+
     protected void init() {
         tableInfos = new ArrayList<>();
         selectAllTableInfos = new ArrayList<>();
@@ -59,6 +63,20 @@ public class BaseLinkedQueryWrapper {
         blnWhere = false;
         blnOr = false;
         blnOpenBracket = false;
+    }
+
+    protected void initConfiguration(Configuration configuration) {
+        if (configuration == null) {
+            return;
+        }
+        mapUnderscoreToCamelCase = configuration.isMapUnderscoreToCamelCase();
+    }
+
+    protected AggregateWrapper buildAggregateWrapper() {
+        AggregateWrapper aggregateWrapper = new AggregateWrapper();
+        aggregateWrapper.setTableInfos(tableInfos);
+        aggregateWrapper.setMapUnderscoreToCamelCase(mapUnderscoreToCamelCase);
+        return aggregateWrapper;
     }
 
     protected void spendOperator() {
@@ -111,7 +129,7 @@ public class BaseLinkedQueryWrapper {
             return null;
         }
 
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field1);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field1, mapUnderscoreToCamelCase);
         String beanColumn = field2.getName();
         ColumnInfo columnInfo = new ColumnInfo();
         columnInfo.setTableIndex(tableInfo.getTableIndex());
@@ -132,7 +150,7 @@ public class BaseLinkedQueryWrapper {
             return null;
         }
 
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field);
+        String tableColumn = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
         ColumnInfo columnInfo = new ColumnInfo();
         columnInfo.setTableIndex(tableInfo.getTableIndex());
         columnInfo.setTableColumns(tableColumn);
@@ -150,7 +168,7 @@ public class BaseLinkedQueryWrapper {
     }
 
     protected void appendFrom(Class<?> clazz, String tableId) {
-        String tableName = ClazzUtils.getTableName(clazz);
+        String tableName = ClazzUtils.getTableName(clazz, mapUnderscoreToCamelCase);
         TableInfo tableInfo = new TableInfo(tableId, clazz);
         tableInfos.add(tableInfo);
         int tableIndex = tableInfos.indexOf(tableInfo);
@@ -184,7 +202,7 @@ public class BaseLinkedQueryWrapper {
     }
 
     protected void appendJoin(Class<?> clazz, String tableId, String joinType) {
-        String tableName = ClazzUtils.getTableName(clazz);
+        String tableName = ClazzUtils.getTableName(clazz, mapUnderscoreToCamelCase);
         TableInfo tableInfo = new TableInfo(tableId, clazz);
         tableInfos.add(tableInfo);
         int tableIndex = tableInfos.indexOf(tableInfo);
@@ -283,14 +301,18 @@ public class BaseLinkedQueryWrapper {
             if (StringUtils.isBlank(columnFormat)) {
                 for (int i = 0; i < tableColumnList.size(); i ++) {
                     String format;
+                    String tableColumn = tableColumnList.get(i);
                     if (StringUtils.isBlank(tableId)) {
-                        format = tableColumnList.get(i);
+                        format = tableColumn;
                     }
                     else {
-                        format = String.format("%s.%s", tableId, tableColumnList.get(i));
+                        format = String.format("%s.%s", tableId, tableColumn);
                     }
                     if (beanColumnSize > i) {
-                        format += String.format(" %s", beanColumnList.get(i));
+                        String beanColumn = beanColumnList.get(i);
+                        if (!tableColumn.equals(beanColumn)) {
+                            format += String.format(" %s", beanColumn);
+                        }
                     }
                     formats.add(format);
                 }
@@ -298,11 +320,12 @@ public class BaseLinkedQueryWrapper {
             else {
                 for (int i = 0; i < tableColumnList.size(); i ++) {
                     String format;
+                    String tableColumn = tableColumnList.get(i);
                     if (StringUtils.isBlank(tableId)) {
-                        format = tableColumnList.get(i);
+                        format = tableColumn;
                     }
                     else {
-                        format = String.format("%s.%s", tableId, tableColumnList.get(i));
+                        format = String.format("%s.%s", tableId, tableColumn);
                     }
                     format = String.format(columnFormat, format);
                     if (beanColumnSize > i) {
