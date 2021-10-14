@@ -242,6 +242,7 @@ public class BaseLinkedQueryWrapper {
                 if (clazz == null) {
                     ColumnInfo columnInfo = new ColumnInfo();
                     columnInfo.setTableIndex(tableIndex);
+                    columnInfo.setTableColumns("*");
                     columnInfos.add(columnInfo);
                     continue;
                 }
@@ -268,9 +269,6 @@ public class BaseLinkedQueryWrapper {
             String beanColumns = columnInfo.getBeanColumns();
             String columnFormat = columnInfo.getColumnFormat();
             if (StringUtils.isBlank(tableColumns)) {
-                if (StringUtils.isNotBlank(tableId)) {
-                    formats.add(String.format("%s.*", tableId));
-                }
                 continue;
             }
             List<String> tableColumnList = Arrays.stream(tableColumns.split(",")).collect(Collectors.toList());
