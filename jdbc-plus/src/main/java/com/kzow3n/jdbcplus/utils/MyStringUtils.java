@@ -24,8 +24,8 @@ public class MyStringUtils {
             }
             if (Character.isUpperCase(charVal)) {
                 stringBuilder.append('_');
-                stringBuilder.append(charVal);
             }
+            stringBuilder.append(charVal);
         }
         return stringBuilder.toString().toLowerCase();
     }
