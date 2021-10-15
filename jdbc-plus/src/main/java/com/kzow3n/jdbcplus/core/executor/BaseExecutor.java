@@ -13,6 +13,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -81,9 +83,8 @@ public class BaseExecutor {
 
     protected <T> T mapToBean(Map<String, Object> map, Class<T> clazz, Map<String, String> fieldMap) {
         updateMap(map, fieldMap);
-        T bean = ClassUtils.newInstance(clazz);
-        BeanMap.create(bean).putAll(map);
-        return bean;
+        //BeanMap.create(bean).putAll(map);
+        return mapToObject(map, clazz);
     }
 
     protected <T> T mapToBean(Map<String, Object> map, Class<T> clazz) {
@@ -91,9 +92,42 @@ public class BaseExecutor {
         Map<String, String> fieldMap = fields.stream()
                 .collect(Collectors.toMap(Field::getName, t -> t.getType().getName()));
         updateMap(map, fieldMap);
-        T bean = ClassUtils.newInstance(clazz);
-        BeanMap.create(bean).putAll(map);
-        return bean;
+        //BeanMap.create(bean).putAll(map);
+        return mapToObject(map, clazz);
+    }
+
+    public static <T> T mapToObject(Map<String, Object> map, Class<T> clazz){
+        T object = ClassUtils.newInstance(clazz);
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            String key = field.getName();
+            String method = getMethodName(key);
+            if (!map.containsKey(key)) {
+                continue;
+            }
+            try {
+                clazz.getMethod(method, field.getType()).invoke(object, map.get(key));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return object;
+    }
+
+    public static String getMethodName(String s){
+        StringBuilder stringBuilder = new StringBuilder("set");
+        if(Character.isUpperCase(s.charAt(0)))
+        {
+            stringBuilder.append(s);
+        }
+        else {
+            stringBuilder.append(Character.toUpperCase(s.charAt(0)))
+                        .append(s.substring(1));
+        }
+        return stringBuilder.toString();
     }
 
     private <T> void updateMap(Map<String, Object> map, Map<String, String> fieldMap) {
@@ -111,6 +145,28 @@ public class BaseExecutor {
             Object obj = entry.getValue();
             if (obj == null) {
                 continue;
+            }
+            //处理String
+            if (!(obj instanceof String)) {
+                String className = fieldMap.get(key);
+                switch (className) {
+                    default:
+                        break;
+                    case "java.lang.String":
+                        entry.setValue(obj.toString());
+                        break;
+                }
+            }
+            //处理BigDecimal
+            if (obj instanceof BigDecimal) {
+                String className = fieldMap.get(key);
+                switch (className) {
+                    default:
+                        break;
+                    case "java.lang.Integer":
+                        entry.setValue(((BigDecimal) obj).intValue());
+                        break;
+                }
             }
             //处理Double
             if (obj instanceof Double) {

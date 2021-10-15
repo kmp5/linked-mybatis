@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.kzow3n.jdbcplus.pojo.TableInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -102,7 +103,7 @@ public class ColumnUtils {
                 tableColumn = annotation2.value();
             }
         }
-        if (tableColumn == null) {
+        if (StringUtils.isBlank(tableColumn)) {
             if (mapUnderscoreToCamelCase) {
                 tableColumn = MyStringUtils.mapUnderscoreToCamelCase(field.getName());
             }
