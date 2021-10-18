@@ -53,7 +53,12 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             log.info(sql);
             try {
                 map = sqlRunner.selectOne(sql, args.toArray());
-                count = Long.parseLong(map.get("selectCount").toString());
+                if (columnCaseInsensitive) {
+                    count = Long.parseLong(map.get("SELECTCOUNT").toString());
+                }
+                else {
+                    count = Long.parseLong(map.get("selectCount").toString());
+                }
                 doCache(cacheKey, count);
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
@@ -63,7 +68,12 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             log.info(sql);
             try {
                 map = sqlRunner.selectOne(sql, args.toArray());
-                count = Long.parseLong(map.get("selectCount").toString());
+                if (columnCaseInsensitive) {
+                    count = Long.parseLong(map.get("SELECTCOUNT").toString());
+                }
+                else {
+                    count = Long.parseLong(map.get("selectCount").toString());
+                }
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
