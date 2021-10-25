@@ -29,7 +29,7 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         String limit = linkedQueryWrapper.getLimit();
         boolean blnAppendLimit = blnLimit && StringUtils.isNotBlank(limit);
         if (CollectionUtils.isEmpty(groupColumns) && !blnAppendLimit) {
-            fullSqlBuilder.append(String.format(linkedQueryWrapper.getSqlBuilder().toString(), "count(1) selectCount"));
+            fullSqlBuilder.append(String.format(linkedQueryWrapper.getSqlBuilder().toString(), "COUNT(1) SELECT_COUNT"));
         }
         else {
             StringBuilder baseSqlBuilder = new StringBuilder();
@@ -37,48 +37,12 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             if (blnAppendLimit) {
                 baseSqlBuilder.append(limit);
             }
-            fullSqlBuilder.append(String.format("select count(1) selectCount from (%s) t", baseSqlBuilder));
+            fullSqlBuilder.append(String.format("SELECT COUNT(1) SELECT_COUNT FROM (%s) T", baseSqlBuilder));
         }
         String sql = fullSqlBuilder.toString();
         List<Object> args = linkedQueryWrapper.getArgs();
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
-        Map<String, Object> map;
-        long count = 0L;
-        if (cacheable) {
-            String cacheKey = getCacheKey(sql, args);
-            if (redisTemplate.hasKey(cacheKey)) {
-                log.info("get cache from redis.");
-                return Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(cacheKey)).toString());
-            }
-            log.info(sql);
-            try {
-                map = sqlRunner.selectOne(sql, args.toArray());
-                if (columnCaseInsensitive) {
-                    count = Long.parseLong(map.get("SELECTCOUNT").toString());
-                }
-                else {
-                    count = Long.parseLong(map.get("selectCount").toString());
-                }
-                doCache(cacheKey, count);
-            } catch (SQLException sqlException) {
-                log.error(sqlException.getMessage());
-            }
-        }
-        else {
-            log.info(sql);
-            try {
-                map = sqlRunner.selectOne(sql, args.toArray());
-                if (columnCaseInsensitive) {
-                    count = Long.parseLong(map.get("SELECTCOUNT").toString());
-                }
-                else {
-                    count = Long.parseLong(map.get("selectCount").toString());
-                }
-            } catch (SQLException sqlException) {
-                log.error(sqlException.getMessage());
-            }
-        }
-        return count;
+        return getCount(sqlRunner, sql, args);
     }
 
     protected List<Map<String, Object>> selectList(LinkedQueryWrapper linkedQueryWrapper) {
@@ -86,32 +50,8 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         linkedQueryWrapper.formatSql();
         String sql = linkedQueryWrapper.getFullSql();
         List<Object> args = linkedQueryWrapper.getArgs();
-
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
-        List<Map<String, Object>> mapList = null;
-        if (cacheable) {
-            String cacheKey = getCacheKey(sql, args);
-            if (redisTemplate.hasKey(cacheKey)) {
-                log.info("get cache from redis.");
-                return (List<Map<String, Object>>)redisTemplate.opsForValue().get(cacheKey);
-            }
-            log.info(sql);
-            try {
-                mapList = sqlRunner.selectAll(sql, args.toArray());
-                doCache(cacheKey, mapList);
-            } catch (SQLException sqlException) {
-                log.error(sqlException.getMessage());
-            }
-        }
-        else {
-            log.info(sql);
-            try {
-                mapList = sqlRunner.selectAll(sql, args.toArray());
-            } catch (SQLException sqlException) {
-                log.error(sqlException.getMessage());
-            }
-        }
-        return mapList;
+        return getMapList(sqlRunner, sql, args);
     }
 
     protected <T> List<Map<String, Object>> selectPage(LinkedQueryWrapper linkedQueryWrapper, Page<T> page, long pageIndex, long pageSize) {
@@ -151,6 +91,40 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         }
 
         List<Object> args = linkedQueryWrapper.getArgs();
+        return getMapList(sqlRunner, sql, args);
+    }
+
+    private Long getCount(MySqlRunner sqlRunner, String sql, List<Object> args) {
+        Map<String, Object> map;
+        long count = 0L;
+        if (cacheable) {
+            String cacheKey = getCacheKey(sql, args);
+            if (redisTemplate.hasKey(cacheKey)) {
+                log.info("get cache from redis.");
+                return Long.parseLong(Objects.requireNonNull(redisTemplate.opsForValue().get(cacheKey)).toString());
+            }
+            log.info(sql);
+            try {
+                map = sqlRunner.selectOne(sql, args.toArray());
+                count = Long.parseLong(map.get("SELECT_COUNT").toString());
+                doCache(cacheKey, count);
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
+        }
+        else {
+            log.info(sql);
+            try {
+                map = sqlRunner.selectOne(sql, args.toArray());
+                count = Long.parseLong(map.get("SELECT_COUNT").toString());
+            } catch (SQLException sqlException) {
+                log.error(sqlException.getMessage());
+            }
+        }
+        return count;
+    }
+
+    private List<Map<String, Object>> getMapList(MySqlRunner sqlRunner, String sql, List<Object> args) {
         List<Map<String, Object>> mapList = null;
         if (cacheable) {
             String cacheKey = getCacheKey(sql, args);

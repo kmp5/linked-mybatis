@@ -74,29 +74,15 @@ public class BaseExecutor {
 
     protected <T> List<T> mapsToBeans(List<Map<String, Object>> maps, Class<T> clazz) {
         List<Field> fields = ClazzUtils.getAllFields(clazz).stream().filter(t -> !Modifier.isStatic(t.getModifiers())).collect(Collectors.toList());
-        Map<String, String> fieldClassNameMap = fields.stream()
-                .collect(Collectors.toMap(Field::getName, t -> t.getType().getName()));
         Map<String, String> fieldMethodNameMap = fields.stream()
                 .collect(Collectors.toMap(Field::getName, t -> getMethodName(t.getName())));
         return CollectionUtils.isEmpty(maps) ? Collections.emptyList() : maps.stream().map((m) -> {
             T bean = ClassUtils.newInstance(clazz);
             for (Field field : fields) {
                 String key = field.getName();
-                String className = fieldClassNameMap.get(key);
+                Class<?> fieldType = field.getType();
                 String methodName = fieldMethodNameMap.get(key);
-                if (columnCaseInsensitive) {
-                    key = key.toUpperCase();
-                }
-                if (!m.containsKey(key)) {
-                    continue;
-                }
-                Object val = m.get(key);
-                Object value = updateValue(val, className);
-                try {
-                    clazz.getMethod(methodName, field.getType()).invoke(bean, value);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                invokeSetMethod(bean, clazz, m, key, methodName, fieldType);
             }
             return bean;
         }).collect(Collectors.toList());
@@ -108,22 +94,30 @@ public class BaseExecutor {
         for (Field field : fields) {
             String key = field.getName();
             String methodName = getMethodName(key);
-            String className = field.getType().getName();
-            if (columnCaseInsensitive) {
-                key = key.toUpperCase();
-            }
-            if (!map.containsKey(key)) {
-                continue;
-            }
-            Object val = map.get(key);
-            Object value = updateValue(val, className);
-            try {
-                clazz.getMethod(methodName, field.getType()).invoke(bean, value);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Class<?> fieldType = field.getType();
+            invokeSetMethod(bean, clazz, map, key, methodName, fieldType);
         }
         return bean;
+    }
+
+    private <T> void invokeSetMethod(T bean, Class<T> clazz, Map<String, Object> map, String key, String methodName, Class<?> fieldType) {
+        String realKey;
+        if (columnCaseInsensitive) {
+            realKey = key.toUpperCase();
+        }
+        else {
+            realKey = key;
+        }
+        if (!map.containsKey(realKey)) {
+            return;
+        }
+        Object val = map.get(realKey);
+        Object value = updateValue(val, fieldType.getName());
+        try {
+            clazz.getMethod(methodName, fieldType).invoke(bean, value);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static String getMethodName(String s) {
