@@ -11,9 +11,14 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.CollectionUtils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -137,14 +142,6 @@ public class BaseExecutor {
         if (val == null) {
             return null;
         }
-        //处理String
-        if (!(val instanceof String)) {
-            if ("java.lang.String".equals(className))
-            {
-                return val.toString();
-            }
-        }
-
         //处理BigDecimal
         if (val instanceof BigDecimal) {
             switch (className) {
@@ -187,6 +184,37 @@ public class BaseExecutor {
                     return ((Integer) val).longValue();
             }
         }
+        //处理Clob
+        else if (val instanceof Clob) {
+            try {
+                return ClobToString((Clob) val);
+            } catch (SQLException | IOException ignored) {
+
+            }
+            return val.toString();
+        }
+        else if (!(val instanceof String)) {
+            if ("java.lang.String".equals(className))
+            {
+                return val.toString();
+            }
+        }
         return val;
+    }
+
+    private String ClobToString(Clob clob) throws SQLException, IOException {
+        String reString = "";
+        Reader is = clob.getCharacterStream();
+        BufferedReader br = new BufferedReader(is);
+        String s = br.readLine();
+        StringBuilder sb = new StringBuilder();
+        while (s != null) {
+            sb.append(s);
+            s = br.readLine();
+        }
+        reString = sb.toString();
+        br.close();
+        is.close();
+        return reString;
     }
 }
