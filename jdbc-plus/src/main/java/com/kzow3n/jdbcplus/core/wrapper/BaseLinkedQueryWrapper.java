@@ -278,7 +278,7 @@ public class BaseLinkedQueryWrapper {
         for (ColumnInfo columnInfo : columnInfos) {
             Integer tableIndex = columnInfo.getTableIndex();
             if (tableIndex == null) {
-                formats.add(String.format("%s %s", columnInfo.getTableColumns(), columnInfo.getBeanColumns()));
+                formats.add(String.format("%s as %s", columnInfo.getTableColumns(), columnInfo.getBeanColumns()));
                 continue;
             }
             TableInfo tableInfo = getTableInfoByIndex(tableIndex);
@@ -311,7 +311,7 @@ public class BaseLinkedQueryWrapper {
                     if (beanColumnSize > i) {
                         String beanColumn = beanColumnList.get(i);
                         if (!tableColumn.equals(beanColumn)) {
-                            format += String.format(" %s", beanColumn);
+                            format += String.format(" as %s", beanColumn);
                         }
                     }
                     formats.add(format);
@@ -329,7 +329,7 @@ public class BaseLinkedQueryWrapper {
                     }
                     format = String.format(columnFormat, format);
                     if (beanColumnSize > i) {
-                        format += String.format(" %s", beanColumnList.get(i));
+                        format += String.format(" as %s", beanColumnList.get(i));
                     }
                     formats.add(format);
                 }
