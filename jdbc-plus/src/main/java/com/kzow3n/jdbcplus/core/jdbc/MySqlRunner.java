@@ -1,9 +1,12 @@
 package com.kzow3n.jdbcplus.core.jdbc;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.builder.StaticSqlSource;
+import org.apache.ibatis.executor.resultset.DefaultResultSetHandler;
+import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.Null;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.mapping.*;
+import org.apache.ibatis.session.*;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
@@ -18,8 +21,9 @@ import java.util.*;
  */
 @Slf4j
 public class MySqlRunner {
-    protected SqlSession sqlSession;
+    private SqlSession sqlSession;
     private final SqlSessionFactory sqlSessionFactory;
+    private Configuration configuration;
     private final TypeHandlerRegistry typeHandlerRegistry;
     private int queryTimeout = 60;
     private DbTypeEnum dbTypeEnum = DbTypeEnum.DEFAULT;
@@ -54,14 +58,14 @@ public class MySqlRunner {
             blnOwnSqlSession = true;
         }
         else {
-            Connection connection = sqlSession.getConnection();
+            Connection connection = this.sqlSession.getConnection();
             if (connection.isClosed()) {
                 this.sqlSession = sqlSessionFactory.openSession();
                 blnOwnSqlSession = true;
             }
         }
-        Connection connection = this.sqlSession.getConnection();
-        DatabaseMetaData md = connection.getMetaData();
+        configuration = this.sqlSession.getConfiguration();
+        DatabaseMetaData md = this.sqlSession.getConnection().getMetaData();
         String dbType = md.getDatabaseProductName().toLowerCase();
         if (dbType.contains("dm")) {
             dbTypeEnum = DbTypeEnum.DM;
@@ -107,6 +111,30 @@ public class MySqlRunner {
         return result;
     }
 
+    public <T> List<T> selectAll(Class<?> type, String sql, Object... args) throws SQLException {
+        List<T> result;
+        Connection connection = sqlSession.getConnection();
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setQueryTimeout(queryTimeout);
+        try {
+            this.setParameters(ps, args);
+            ps.executeQuery();
+            DefaultResultSetHandler resultSetHandler = getResultSetHandler(type);
+            result = (List<T>) resultSetHandler.handleResultSets(ps);
+        }
+        finally {
+            try {
+                if (blnOwnSqlSession) {
+                    connection.close();
+                    sqlSession.close();
+                }
+                ps.close();
+            } catch (SQLException ignored) {
+            }
+        }
+        return result;
+    }
+
     private void setParameters(PreparedStatement ps, Object... args) throws SQLException {
         int i = 0;
 
@@ -130,17 +158,46 @@ public class MySqlRunner {
 
     private List<Map<String, Object>> getResults(ResultSet rs) throws SQLException {
         List<Map<String, Object>> list = new ArrayList<>();
-        // 得到所有数据
-        ResultSetMetaData rmd = rs.getMetaData();
-        // 得到列名总数
-        int columnCount = rmd.getColumnCount();
-        while (rs.next()) {
-            Map<String, Object> rowMap = new HashMap<>(columnCount);
-            for (int i = 1; i <= columnCount; i++) {
-                rowMap.put(rmd.getColumnLabel(i), rs.getObject(i));
+        List<String> columns = new ArrayList<>();
+        List<TypeHandler<?>> typeHandlers = new ArrayList<>();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        for (int i = 0, n = rsmd.getColumnCount(); i < n; i++) {
+            columns.add(rsmd.getColumnLabel(i + 1));
+            try {
+                Class<?> type = Resources.classForName(rsmd.getColumnClassName(i + 1));
+                TypeHandler<?> typeHandler = typeHandlerRegistry.getTypeHandler(type);
+                if (typeHandler == null) {
+                    typeHandler = typeHandlerRegistry.getTypeHandler(Object.class);
+                }
+                typeHandlers.add(typeHandler);
+            } catch (Exception e) {
+                typeHandlers.add(typeHandlerRegistry.getTypeHandler(Object.class));
             }
-            list.add(rowMap);
+        }
+        while (rs.next()) {
+            Map<String, Object> row = new HashMap<>();
+            for (int i = 0, n = columns.size(); i < n; i++) {
+                String name = columns.get(i);
+                TypeHandler<?> handler = typeHandlers.get(i);
+                row.put(name.toUpperCase(Locale.ENGLISH), handler.getResult(rs, name));
+            }
+            list.add(row);
         }
         return list;
+    }
+
+    private DefaultResultSetHandler getResultSetHandler(Class<?> type) {
+        final MappedStatement ms = getMappedStatement(type);
+        final RowBounds rowBounds = new RowBounds();
+        return new DefaultResultSetHandler(null, ms, null, null, null, rowBounds);
+    }
+
+    private MappedStatement getMappedStatement(Class<?> type) {
+        return new MappedStatement.Builder(configuration, "linkedSelect", new StaticSqlSource(configuration, "some select statement"), SqlCommandType.SELECT).resultMaps(
+            new ArrayList<ResultMap>() {
+                {
+                    add(new ResultMap.Builder(configuration, "linkedMap", type, new ArrayList<>()).build());
+                }
+            }).build();
     }
 }

@@ -40,24 +40,14 @@ public class ProcedureExecutor extends BaseProcedureExecutor {
     }
 
     public <T> List<T> forObjects(Class<T> clazz, String proName, @Nullable Object... args) {
-        List<Map<String, Object>> mapList = execPro(proName, args);
-        if (CollectionUtils.isEmpty(mapList)) {
-            return null;
-        }
-        updateMapsKeys(mapList, clazz);
-        return mapsToBeans(mapList, clazz);
+        return execPro(clazz, proName, args);
     }
 
     public <T> T forObject(Class<T> clazz, String proName, @Nullable Object... args) {
-        List<Map<String, Object>> mapList = execPro(proName, args);
-        if (CollectionUtils.isEmpty(mapList)) {
+        List<T> list = execPro(clazz, proName, args);
+        if (CollectionUtils.isEmpty(list)) {
             return null;
         }
-        Map<String, Object> map = mapList.stream().findFirst().orElse(null);
-        if (map == null) {
-            return null;
-        }
-        updateMapKeys(map, clazz);
-        return mapToBean(map, clazz);
+        return list.stream().findFirst().orElse(null);
     }
 }

@@ -1,12 +1,8 @@
 package com.kzow3n.jdbcplus.core.executor;
 
 import com.kzow3n.jdbcplus.core.jdbc.MySqlRunner;
-import com.kzow3n.jdbcplus.utils.ClazzUtils;
-import com.kzow3n.jdbcplus.utils.ColumnUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,28 +43,29 @@ public class BaseProcedureExecutor extends BaseExecutor {
         return mapList;
     }
 
-    protected void updateMapsKeys(List<Map<String, Object>> mapList, Class<?> clazz) {
-        List<Field> fields = ClazzUtils.getAllFields(clazz);
-        for (Field field : fields) {
-            String tableColumn = ColumnUtils.getTableColumnByField(field, mapUnderscoreToCamelCase);
-            if (StringUtils.isNotBlank(tableColumn)) {
-                String beanColumn = field.getName();
-                mapList.forEach(map -> {
-                    map.put(beanColumn, map.remove(tableColumn));
-                });
+    protected <T> List<T> execPro(Class<T> clazz, String proName, Object... args) {
+        checkExecutorValid();
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append(String.format("call %s", proName));
+        if (args != null) {
+            List<String> formats = new ArrayList<>();
+            for (int i = 0;i < args.length;i ++) {
+                formats.add("?");
             }
+            sqlBuilder.append(String.format("(%s)", String.join(",", formats)));
         }
-    }
-
-    protected void updateMapKeys(Map<String, Object> map, Class<?> clazz) {
-        List<Field> fields = ClazzUtils.getAllFields(clazz);
-        for (Field field : fields) {
-            String tableColumn = ColumnUtils.getTableColumnByField(field, mapUnderscoreToCamelCase);
-            if (StringUtils.isNotBlank(tableColumn)) {
-                String beanColumn = field.getName();
-                map.put(beanColumn, map.remove(tableColumn));
-            }
+        String sql = sqlBuilder.toString();
+        log.info(sql);
+        List<T> list = null;
+        MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
+        try {
+            list = sqlRunner.selectAll(clazz, sql, args);
+            //若存储过程中有执行update操作，按需传入redisTemplate清空缓存
+            clearCache();
+        } catch (SQLException sqlException) {
+            log.error(sqlException.getMessage());
         }
+        return list;
     }
 
     private void clearCache() {

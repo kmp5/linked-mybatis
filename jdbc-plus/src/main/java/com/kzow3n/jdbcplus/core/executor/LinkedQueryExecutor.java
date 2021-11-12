@@ -29,15 +29,15 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
     }
 
     public long forCount(LinkedQueryWrapper linkedQueryWrapper) {
-        return selectCount(linkedQueryWrapper, true);
+        return queryForCount(linkedQueryWrapper, true);
     }
 
     public List<Map<String, Object>> forMaps(LinkedQueryWrapper linkedQueryWrapper) {
-        return selectList(linkedQueryWrapper);
+        return queryForMaps(linkedQueryWrapper);
     }
 
     public Map<String, Object> forMap(LinkedQueryWrapper linkedQueryWrapper) {
-        List<Map<String, Object>> mapList = selectList(linkedQueryWrapper);
+        List<Map<String, Object>> mapList = queryForMaps(linkedQueryWrapper);
         if (CollectionUtils.isEmpty(mapList)) {
             return null;
         }
@@ -45,41 +45,24 @@ public class LinkedQueryExecutor extends BaseLinkedQueryExecutor {
     }
 
     public <T> List<T> forObjects(Class<T> clazz, LinkedQueryWrapper linkedQueryWrapper) {
-        List<Map<String, Object>> mapList = selectList(linkedQueryWrapper);
-        if (CollectionUtils.isEmpty(mapList)) {
-            return null;
-        }
-
-        return mapsToBeans(mapList, clazz);
+        return queryForObjects(clazz, linkedQueryWrapper);
     }
 
     public <T> T forObject(Class<T> clazz, LinkedQueryWrapper linkedQueryWrapper) {
-        List<Map<String, Object>> mapList = selectList(linkedQueryWrapper);
-        if (CollectionUtils.isEmpty(mapList)) {
+        List<T> list = queryForObjects(clazz, linkedQueryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
             return null;
         }
-        Map<String, Object> map = mapList.stream().findFirst().orElse(null);
-        if (map == null) {
-            return null;
-        }
-        return mapToBean(map, clazz);
+        return list.stream().findFirst().orElse(null);
     }
 
     public Page<Map<String, Object>> forMapPage(LinkedQueryWrapper linkedQueryWrapper, int pageIndex, int pageSize) {
         Page<Map<String, Object>> page = new Page<>();
-        List<Map<String, Object>> mapList = selectPage(linkedQueryWrapper, page, pageIndex, pageSize);
-        page.setRecords(mapList);
-        return page;
+        return queryForMapPage(linkedQueryWrapper, page, pageIndex, pageSize);
     }
 
     public <T> Page<T> forObjectPage(Class<T> clazz, LinkedQueryWrapper linkedQueryWrapper, int pageIndex, int pageSize) {
         Page<T> page = new Page<>();
-        List<Map<String, Object>> mapList = selectPage(linkedQueryWrapper, page, pageIndex, pageSize);
-        if (CollectionUtils.isEmpty(mapList)) {
-            return page;
-        }
-        List<T> list = mapsToBeans(mapList, clazz);
-        page.setRecords(list);
-        return page;
+        return queryForObjectPage(clazz, linkedQueryWrapper, page, pageIndex, pageSize);
     }
 }

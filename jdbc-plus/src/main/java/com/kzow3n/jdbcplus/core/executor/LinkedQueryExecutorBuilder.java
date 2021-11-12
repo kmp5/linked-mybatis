@@ -18,7 +18,6 @@ public class LinkedQueryExecutorBuilder {
     private boolean cacheable = false;
     private long cacheTimeout = 60L;
     private int queryTimeout = 60;
-    protected boolean columnCaseInsensitive = false;
 
     public LinkedQueryExecutorBuilder(SqlSessionFactory sqlSessionFactory) {
         this.sqlSessionFactory = sqlSessionFactory;
@@ -49,11 +48,6 @@ public class LinkedQueryExecutorBuilder {
         return this;
     }
 
-    public LinkedQueryExecutorBuilder columnCaseInsensitive(boolean columnCaseInsensitive) {
-        this.columnCaseInsensitive = columnCaseInsensitive;
-        return this;
-    }
-
     public LinkedQueryExecutor build() {
         LinkedQueryExecutor executor = new LinkedQueryExecutor(sqlSessionFactory);
         if (sqlSession != null) {
@@ -65,7 +59,7 @@ public class LinkedQueryExecutorBuilder {
             executor.setRedisTemplate(redisTemplate);
         }
         executor.setCacheTimeout(cacheTimeout);
-        executor.setColumnCaseInsensitive(columnCaseInsensitive);
+        //executor.setColumnCaseInsensitive(columnCaseInsensitive);
         return executor;
     }
 }
