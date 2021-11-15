@@ -26,7 +26,6 @@ public class BaseExecutor {
     protected Boolean cacheable = false;
     protected Long cacheTimeout = 60L;
     protected Integer queryTimeout = 60;
-    //protected boolean columnCaseInsensitive = false;
 
     protected boolean mapUnderscoreToCamelCase = true;
 

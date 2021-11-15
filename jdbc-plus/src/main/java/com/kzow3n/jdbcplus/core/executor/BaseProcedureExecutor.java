@@ -20,16 +20,7 @@ public class BaseProcedureExecutor extends BaseExecutor {
 
     protected List<Map<String, Object>> execPro(String proName, Object... args) {
         checkExecutorValid();
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append(String.format("call %s", proName));
-        if (args != null) {
-            List<String> formats = new ArrayList<>();
-            for (int i = 0;i < args.length;i ++) {
-                formats.add("?");
-            }
-            sqlBuilder.append(String.format("(%s)", String.join(",", formats)));
-        }
-        String sql = sqlBuilder.toString();
+        String sql = getSql(proName, args);
         log.info(sql);
         List<Map<String, Object>> mapList = null;
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
@@ -45,16 +36,7 @@ public class BaseProcedureExecutor extends BaseExecutor {
 
     protected <T> List<T> execPro(Class<T> clazz, String proName, Object... args) {
         checkExecutorValid();
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append(String.format("call %s", proName));
-        if (args != null) {
-            List<String> formats = new ArrayList<>();
-            for (int i = 0;i < args.length;i ++) {
-                formats.add("?");
-            }
-            sqlBuilder.append(String.format("(%s)", String.join(",", formats)));
-        }
-        String sql = sqlBuilder.toString();
+        String sql = getSql(proName, args);
         log.info(sql);
         List<T> list = null;
         MySqlRunner sqlRunner = new MySqlRunner(sqlSessionFactory, sqlSession, queryTimeout);
@@ -66,6 +48,19 @@ public class BaseProcedureExecutor extends BaseExecutor {
             log.error(sqlException.getMessage());
         }
         return list;
+    }
+
+    private String getSql(String proName, Object... args) {
+        StringBuilder sqlBuilder = new StringBuilder();
+        sqlBuilder.append(String.format("call %s", proName));
+        if (args != null) {
+            List<String> formats = new ArrayList<>();
+            for (int i = 0;i < args.length;i ++) {
+                formats.add("?");
+            }
+            sqlBuilder.append(String.format("(%s)", String.join(",", formats)));
+        }
+        return sqlBuilder.toString();
     }
 
     private void clearCache() {

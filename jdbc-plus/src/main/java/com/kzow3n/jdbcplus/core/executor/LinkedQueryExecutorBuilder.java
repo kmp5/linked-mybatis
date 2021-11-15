@@ -59,7 +59,6 @@ public class LinkedQueryExecutorBuilder {
             executor.setRedisTemplate(redisTemplate);
         }
         executor.setCacheTimeout(cacheTimeout);
-        //executor.setColumnCaseInsensitive(columnCaseInsensitive);
         return executor;
     }
 }
