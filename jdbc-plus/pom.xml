@@ -89,6 +89,10 @@
     <profiles>
         <profile>
             <id>release</id>
+            <properties>
+                <gpg.executable>C:\Program Files (x86)\GnuPG\bin\gpg</gpg.executable>
+                <gpg.passphrase>www.ocgcn.com</gpg.passphrase>
+            </properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
                 <property>
