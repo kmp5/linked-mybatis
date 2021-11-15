@@ -179,7 +179,7 @@ public class MySqlRunner {
             for (int i = 0, n = columns.size(); i < n; i++) {
                 String name = columns.get(i);
                 TypeHandler<?> handler = typeHandlers.get(i);
-                row.put(name.toUpperCase(Locale.ENGLISH), handler.getResult(rs, name));
+                row.put(name, handler.getResult(rs, name));
             }
             list.add(row);
         }
