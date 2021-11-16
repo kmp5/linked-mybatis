@@ -54,26 +54,24 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
 
     @SafeVarargs
     public final <K> LinkedQueryWrapper select(Integer tableIndex, SFunction<K, ?>... fns) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         for (SFunction<K, ?> fn : fns) {
             Field field = ColumnUtils.getField(fn);
-            addColumnInfoByField(tableInfo, field, true, null, null);
+            addColumnInfo(tableIndex, field, true, null, null);
         }
         return this;
     }
 
     public final <K, M> LinkedQueryWrapper select(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        addColumnInfoByFields(tableInfo, field1, true, field2, null);
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, field1, true, beanColumn, null);
         return this;
     }
 
     public final <K> LinkedQueryWrapper select(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
-        addColumnInfoByField(tableInfo, field1, true, beanColumn, null);
+        addColumnInfo(tableIndex, field1, true, beanColumn, null);
         return this;
     }
 
@@ -196,17 +194,16 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     }
 
     public final <K, M> LinkedQueryWrapper count(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        addColumnInfoByFields(tableInfo, field1, true, field2, "count(%s)");
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, field1, true, beanColumn, "count(%s)");
         return this;
     }
 
     public final <K> LinkedQueryWrapper count(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
-        addColumnInfoByField(tableInfo, field1, true, beanColumn, "count(%s)");
+        addColumnInfo(tableIndex, field1, true, beanColumn, "count(%s)");
         return this;
     }
 
@@ -223,17 +220,16 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     }
 
     public final <K, M> LinkedQueryWrapper avg(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        addColumnInfoByFields(tableInfo, field1, true, field2, "avg(%s)");
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, field1, true, beanColumn, "avg(%s)");
         return this;
     }
 
     public final <K> LinkedQueryWrapper avg(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
-        addColumnInfoByField(tableInfo, field1, true, beanColumn, "avg(%s)");
+        addColumnInfo(tableIndex, field1, true, beanColumn, "avg(%s)");
         return this;
     }
 
@@ -250,17 +246,16 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     }
 
     public final <K, M> LinkedQueryWrapper sum(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        addColumnInfoByFields(tableInfo, field1, true, field2, "sum(%s)");
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, field1, true, beanColumn, "sum(%s)");
         return this;
     }
 
     public final <K> LinkedQueryWrapper sum(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
-        addColumnInfoByField(tableInfo, field1, true, beanColumn, "sum(%s)");
+        addColumnInfo(tableIndex, field1, true, beanColumn, "sum(%s)");
         return this;
     }
 
@@ -277,17 +272,16 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     }
 
     public final <K, M> LinkedQueryWrapper max(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        addColumnInfoByFields(tableInfo, field1, true, field2, "max(%s)");
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, field1, true, beanColumn, "max(%s)");
         return this;
     }
 
     public final <K> LinkedQueryWrapper max(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
-        addColumnInfoByField(tableInfo, field1, true, beanColumn, "max(%s)");
+        addColumnInfo(tableIndex, field1, true, beanColumn, "max(%s)");
         return this;
     }
 
@@ -304,17 +298,16 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     }
 
     public final <K, M> LinkedQueryWrapper min(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        addColumnInfoByFields(tableInfo, field1, true, field2, "min(%s)");
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, field1, true, beanColumn, "min(%s)");
         return this;
     }
 
     public final <K> LinkedQueryWrapper min(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
-        addColumnInfoByField(tableInfo, field1, true, beanColumn, "min(%s)");
+        addColumnInfo(tableIndex, field1, true, beanColumn, "min(%s)");
         return this;
     }
 
@@ -331,17 +324,16 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
     }
 
     public final <K, M> LinkedQueryWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, SFunction<M, ?> fn2) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        addColumnInfoByFields(tableInfo, field1, true, field2, "group_concat(%s)");
+        String beanColumn = field2.getName();
+        addColumnInfo(tableIndex, field1, true, beanColumn, "group_concat(%s)");
         return this;
     }
 
     public final <K> LinkedQueryWrapper groupConcat(Integer tableIndex, SFunction<K, ?> fn1, String beanColumn) {
-        TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         Field field1 = ColumnUtils.getField(fn1);
-        addColumnInfoByField(tableInfo, field1, true, beanColumn, "group_concat(%s)");
+        addColumnInfo(tableIndex, field1, true, beanColumn, "group_concat(%s)");
         return this;
     }
 
@@ -1183,6 +1175,16 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         TableInfo tableInfo = getTableInfoByIndex(tableIndex);
         String tableId = tableInfo.getTableId();
         orderBy(tableId, column, false, true);
+        return this;
+    }
+
+    public LinkedQueryWrapper nullsFirst() {
+        orderBy.append(" nulls first");
+        return this;
+    }
+
+    public LinkedQueryWrapper nullsLast() {
+        orderBy.append(" nulls last");
         return this;
     }
 

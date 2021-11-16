@@ -2,6 +2,8 @@ package com.kzow3n.jdbcplus.pojo;
 
 import lombok.Data;
 
+import java.lang.reflect.Field;
+
 /**
  * 表字段信息
  *
@@ -18,4 +20,6 @@ public class ColumnInfo {
     private String beanColumns;
 
     private String columnFormat;
+
+    private Field field;
 }

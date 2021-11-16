@@ -123,28 +123,7 @@ public class BaseLinkedQueryWrapper {
         this.columnInfos.add(columnInfo);
     }
 
-    protected String addColumnInfoByFields(TableInfo tableInfo, Field field1, boolean formatBeanColumn, Field field2, String columnFormat) {
-        //不处理静态字段
-        if (Modifier.isStatic(field1.getModifiers())) {
-            return null;
-        }
-
-        String tableColumn = ColumnUtils.getColumn(tableInfo, field1, mapUnderscoreToCamelCase);
-        String beanColumn = field2.getName();
-        ColumnInfo columnInfo = new ColumnInfo();
-        columnInfo.setTableIndex(tableInfo.getTableIndex());
-        columnInfo.setTableColumns(tableColumn);
-        if (formatBeanColumn) {
-            columnInfo.setBeanColumns(beanColumn);
-        }
-        if (!StringUtils.isBlank(columnFormat)) {
-            columnInfo.setColumnFormat(columnFormat);
-        }
-        this.columnInfos.add(columnInfo);
-        return tableColumn;
-    }
-
-    protected String addColumnInfoByField(TableInfo tableInfo, Field field, boolean formatBeanColumn, String beanColumn, String columnFormat) {
+    protected String addColumnInfo(TableInfo tableInfo, Field field, boolean formatBeanColumn, String beanColumn, String columnFormat) {
         //不处理静态字段
         if (Modifier.isStatic(field.getModifiers())) {
             return null;
@@ -165,6 +144,27 @@ public class BaseLinkedQueryWrapper {
         }
         this.columnInfos.add(columnInfo);
         return tableColumn;
+    }
+
+    protected void addColumnInfo(Integer tableIndex, Field field, boolean formatBeanColumn, String beanColumn, String columnFormat) {
+        //不处理静态字段
+        if (Modifier.isStatic(field.getModifiers())) {
+            return;
+        }
+
+        ColumnInfo columnInfo = new ColumnInfo();
+        columnInfo.setTableIndex(tableIndex);
+        columnInfo.setField(field);
+        if (formatBeanColumn) {
+            if (StringUtils.isBlank(beanColumn)) {
+                beanColumn = field.getName();
+            }
+            columnInfo.setBeanColumns(beanColumn);
+        }
+        if (!StringUtils.isBlank(columnFormat)) {
+            columnInfo.setColumnFormat(columnFormat);
+        }
+        this.columnInfos.add(columnInfo);
     }
 
     protected void appendFrom(Class<?> clazz, String tableId) {
@@ -266,7 +266,7 @@ public class BaseLinkedQueryWrapper {
                 }
                 List<Field> fields = ClazzUtils.getAllFields(clazz);
                 for (Field field : fields) {
-                    addColumnInfoByField(tableInfo, field, formatBeanColumn, null, null);
+                    addColumnInfo(tableInfo, field, formatBeanColumn, null, null);
                 }
             }
         }
@@ -286,8 +286,12 @@ public class BaseLinkedQueryWrapper {
             String tableColumns = columnInfo.getTableColumns();
             String beanColumns = columnInfo.getBeanColumns();
             String columnFormat = columnInfo.getColumnFormat();
+            Field field = columnInfo.getField();
             if (StringUtils.isBlank(tableColumns)) {
-                continue;
+                if (field == null) {
+                    continue;
+                }
+                tableColumns = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
             }
             List<String> tableColumnList = Arrays.stream(tableColumns.split(",")).collect(Collectors.toList());
             List<String> beanColumnList;
@@ -548,7 +552,7 @@ public class BaseLinkedQueryWrapper {
         String tableId = tableInfo.getTableId();
         for (SFunction<K, ?> fn : fns) {
             Field field = ColumnUtils.getField(fn);
-            String tableColumn = addColumnInfoByField(tableInfo, field, true, null, null);
+            String tableColumn = addColumnInfo(tableInfo, field, true, null, null);
             groupColumns.add(String.format("%s.%s", tableId, tableColumn));
         }
     }
@@ -557,14 +561,15 @@ public class BaseLinkedQueryWrapper {
         String tableId = tableInfo.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
         Field field2 = ColumnUtils.getField(fn2);
-        String tableColumn = addColumnInfoByFields(tableInfo, field1, true, field2, null);
+        String beanColumn = field2.getName();
+        String tableColumn = addColumnInfo(tableInfo, field1, true, beanColumn, null);
         groupColumns.add(String.format("%s.%s", tableId, tableColumn));
     }
 
     protected final <K> void groupBy(TableInfo tableInfo, SFunction<K, ?> fn1, String beanColumn) {
         String tableId = tableInfo.getTableId();
         Field field1 = ColumnUtils.getField(fn1);
-        String tableColumn = addColumnInfoByField(tableInfo, field1, true, beanColumn, null);
+        String tableColumn = addColumnInfo(tableInfo, field1, true, beanColumn, null);
         groupColumns.add(String.format("%s.%s", tableId, tableColumn));
     }
 
