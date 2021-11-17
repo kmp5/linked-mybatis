@@ -251,25 +251,7 @@ public class BaseLinkedQueryWrapper {
     }
 
     protected String formatColumns() {
-        if (!CollectionUtils.isEmpty(selectAllTableInfos)) {
-            for (TableInfo selectAllTableInfo : selectAllTableInfos) {
-                Integer tableIndex = selectAllTableInfo.getTableIndex();
-                Boolean formatBeanColumn = selectAllTableInfo.getFormatBeanColumn();
-                TableInfo tableInfo = getTableInfoByIndex(tableIndex);
-                Class<?> clazz = tableInfo.getTableClass();
-                if (clazz == null) {
-                    ColumnInfo columnInfo = new ColumnInfo();
-                    columnInfo.setTableIndex(tableIndex);
-                    columnInfo.setTableColumns("*");
-                    columnInfos.add(columnInfo);
-                    continue;
-                }
-                List<Field> fields = ClazzUtils.getAllFields(clazz);
-                for (Field field : fields) {
-                    addColumnInfo(tableInfo, field, formatBeanColumn, null, null);
-                }
-            }
-        }
+        addAllTableColumns();
         if (CollectionUtils.isEmpty(columnInfos)) {
             return "*";
         }
@@ -278,7 +260,6 @@ public class BaseLinkedQueryWrapper {
         for (ColumnInfo columnInfo : columnInfos) {
             Integer tableIndex = columnInfo.getTableIndex();
             if (tableIndex == null) {
-                formats.add(String.format("%s as %s", columnInfo.getTableColumns(), columnInfo.getBeanColumns()));
                 continue;
             }
             TableInfo tableInfo = getTableInfoByIndex(tableIndex);
@@ -294,52 +275,56 @@ public class BaseLinkedQueryWrapper {
                 tableColumns = ColumnUtils.getColumn(tableInfo, field, mapUnderscoreToCamelCase);
             }
             List<String> tableColumnList = Arrays.stream(tableColumns.split(",")).collect(Collectors.toList());
-            List<String> beanColumnList;
-            if (StringUtils.isBlank(beanColumns)) {
-                beanColumnList = new ArrayList<>();
-            }
-            else {
-                beanColumnList= Arrays.stream(beanColumns.split(",")).collect(Collectors.toList());
-            }
+            List<String> beanColumnList = StringUtils.isBlank(beanColumns) ?
+                    new ArrayList<>() : Arrays.stream(beanColumns.split(",")).collect(Collectors.toList());
             int beanColumnSize = beanColumnList.size();
-            if (StringUtils.isBlank(columnFormat)) {
-                for (int i = 0; i < tableColumnList.size(); i ++) {
-                    String format;
-                    String tableColumn = tableColumnList.get(i);
-                    if (StringUtils.isBlank(tableId)) {
-                        format = tableColumn;
-                    }
-                    else {
-                        format = String.format("%s.%s", tableId, tableColumn);
-                    }
+            boolean blnTableIdBlank = StringUtils.isBlank(tableId);
+            boolean blnColumnFormatBlank = StringUtils.isBlank(columnFormat);
+            for (int i = 0; i < tableColumnList.size(); i ++) {
+                String tableColumn = tableColumnList.get(i);
+                String format = blnTableIdBlank ?
+                        tableColumn : String.format("%s.%s", tableId, tableColumn);
+                if (blnColumnFormatBlank) {
                     if (beanColumnSize > i) {
                         String beanColumn = beanColumnList.get(i);
                         if (!tableColumn.equals(beanColumn)) {
                             format += String.format(" as %s", beanColumn);
                         }
                     }
-                    formats.add(format);
                 }
-            }
-            else {
-                for (int i = 0; i < tableColumnList.size(); i ++) {
-                    String format;
-                    String tableColumn = tableColumnList.get(i);
-                    if (StringUtils.isBlank(tableId)) {
-                        format = tableColumn;
-                    }
-                    else {
-                        format = String.format("%s.%s", tableId, tableColumn);
-                    }
+                else {
                     format = String.format(columnFormat, format);
                     if (beanColumnSize > i) {
                         format += String.format(" as %s", beanColumnList.get(i));
                     }
-                    formats.add(format);
                 }
+                formats.add(format);
             }
         }
         return String.join(",", formats);
+    }
+
+    private void addAllTableColumns() {
+        if (CollectionUtils.isEmpty(selectAllTableInfos)) {
+            return;
+        }
+        for (TableInfo selectAllTableInfo : selectAllTableInfos) {
+            Integer tableIndex = selectAllTableInfo.getTableIndex();
+            Boolean formatBeanColumn = selectAllTableInfo.getFormatBeanColumn();
+            TableInfo tableInfo = getTableInfoByIndex(tableIndex);
+            Class<?> clazz = tableInfo.getTableClass();
+            if (clazz == null) {
+                ColumnInfo columnInfo = new ColumnInfo();
+                columnInfo.setTableIndex(tableIndex);
+                columnInfo.setTableColumns("*");
+                columnInfos.add(columnInfo);
+                continue;
+            }
+            List<Field> fields = ClazzUtils.getAllFields(clazz);
+            for (Field field : fields) {
+                addColumnInfo(tableInfo, field, formatBeanColumn, null, null);
+            }
+        }
     }
 
     protected void isNull(String tableId, String column) {
