@@ -111,7 +111,7 @@ public class MySqlRunner {
         return result;
     }
 
-    public <T> List<T> selectAll(Class<?> type, String sql, Object... args) throws SQLException {
+    public <T> List<T> selectAll(Class<T> type, String sql, Object... args) throws SQLException {
         List<T> result;
         Connection connection = sqlSession.getConnection();
         PreparedStatement ps = connection.prepareStatement(sql);
