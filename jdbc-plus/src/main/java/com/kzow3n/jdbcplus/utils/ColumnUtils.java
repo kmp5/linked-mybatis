@@ -105,7 +105,7 @@ public class ColumnUtils {
         }
         if (StringUtils.isBlank(tableColumn)) {
             if (mapUnderscoreToCamelCase) {
-                tableColumn = MyStringUtils.mapUnderscoreToCamelCase(field.getName());
+                tableColumn = com.baomidou.mybatisplus.core.toolkit.StringUtils.underlineToCamel(field.getName());
             }
             else {
                 tableColumn = field.getName();

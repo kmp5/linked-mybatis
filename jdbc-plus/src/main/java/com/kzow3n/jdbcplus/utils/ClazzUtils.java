@@ -25,7 +25,7 @@ public class ClazzUtils {
         TableName annotation = clazz.getAnnotation(TableName.class);
         if (annotation == null) {
             if (mapUnderscoreToCamelCase) {
-                return MyStringUtils.mapUnderscoreToCamelCase(clazz.getSimpleName());
+                return com.baomidou.mybatisplus.core.toolkit.StringUtils.underlineToCamel(clazz.getSimpleName());
             }
             else {
                 return clazz.getSimpleName();
