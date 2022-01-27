@@ -1,5 +1,6 @@
 package com.kzow3n.jdbcplus.core.jdbc;
 
+import com.baomidou.mybatisplus.annotation.DbType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.StaticSqlSource;
 import org.apache.ibatis.executor.resultset.DefaultResultSetHandler;
@@ -70,8 +71,14 @@ public class MySqlRunner {
         if (dbType.contains("dm")) {
             dbTypeEnum = DbTypeEnum.DM;
         }
-        else if (dbType.contains("sqlserver") || dbType.contains("sql server")) {
+        else if (dbType.contains("sqlserver")) {
             dbTypeEnum = DbTypeEnum.SQL_SERVER;
+        }
+        else if (dbType.contains("postgresql")) {
+            dbTypeEnum = DbTypeEnum.POSTGRE_SQL;
+        }
+        else if (dbType.contains("oracle")) {
+            dbTypeEnum = DbTypeEnum.ORACLE;
         }
     }
 

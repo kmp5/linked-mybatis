@@ -97,7 +97,12 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             log.info(sql);
             try {
                 map = sqlRunner.selectOne(sql, args.toArray());
-                count = Long.parseLong(map.get("SELECT_COUNT").toString());
+                if (map.containsKey("SELECT_COUNT")) {
+                    count = Long.parseLong(map.get("SELECT_COUNT").toString());
+                }
+                else {
+                    count = Long.parseLong(map.get("select_count").toString());
+                }
                 doCache(cacheKey, count);
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
@@ -107,7 +112,12 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             log.info(sql);
             try {
                 map = sqlRunner.selectOne(sql, args.toArray());
-                count = Long.parseLong(map.get("SELECT_COUNT").toString());
+                if (map.containsKey("SELECT_COUNT")) {
+                    count = Long.parseLong(map.get("SELECT_COUNT").toString());
+                }
+                else {
+                    count = Long.parseLong(map.get("select_count").toString());
+                }
             } catch (SQLException sqlException) {
                 log.error(sqlException.getMessage());
             }
@@ -175,11 +185,17 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         page.setTotal(total).setPages(pages).setCurrent(pageIndex).setSize(pageSize);
 
         String sql;
+        //待补充oracle的分页逻辑
         switch (dbTypeEnum) {
             default:
                 sql = linkedQueryWrapper.getBaseSql() +
                         linkedQueryWrapper.getOrderBy().toString() +
                         String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
+                break;
+            case POSTGRE_SQL:
+                sql = linkedQueryWrapper.getBaseSql() +
+                        linkedQueryWrapper.getOrderBy().toString() +
+                        String.format(" limit %d offset %d", pageSize, (pageIndex - 1L) * pageSize);
                 break;
             case DM:
                 sql = linkedQueryWrapper.getBaseSql() +

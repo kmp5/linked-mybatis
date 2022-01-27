@@ -11,15 +11,23 @@ public enum DbTypeEnum {
     /**
      * 默认:mysql
      */
-    DEFAULT(1,"默认:mysql"),
+    DEFAULT(1, "默认:mysql"),
     /**
      * sqlserver
      */
-    SQL_SERVER(2,"sqlserver"),
+    SQL_SERVER(2, "sqlserver"),
     /**
      * 达梦
      */
-    DM(3,"达梦"),
+    DM(3, "达梦"),
+    /**
+     * postgresql
+     */
+    POSTGRE_SQL(4, "postgresql"),
+    /**
+     * oracle
+     */
+    ORACLE(5, "oracle")
     ;
 
     private Integer key;
