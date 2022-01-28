@@ -14,12 +14,8 @@ import java.lang.reflect.Field;
 public class ColumnInfo {
 
     private Integer tableIndex;
-
     private String tableColumns;
-
     private String beanColumns;
-
     private String columnFormat;
-
     private Field field;
 }

@@ -24,10 +24,7 @@ public class TableInfo {
     }
 
     private Integer tableIndex;
-
     private Boolean formatBeanColumn = true;
-
     private String tableId;
-
     private Class<?> tableClass;
 }

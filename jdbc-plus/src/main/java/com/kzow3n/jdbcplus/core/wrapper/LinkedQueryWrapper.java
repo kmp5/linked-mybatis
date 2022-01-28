@@ -1178,23 +1178,27 @@ public class LinkedQueryWrapper extends BaseLinkedQueryWrapper {
         return this;
     }
 
+    //仅适用于达梦、oracle等支持nulls first/last语法的数据库
     public LinkedQueryWrapper nullsFirst() {
         orderBy.append(" nulls first");
         return this;
     }
 
+    //仅适用于达梦、oracle等支持nulls first/last语法的数据库
     public LinkedQueryWrapper nullsLast() {
         orderBy.append(" nulls last");
         return this;
     }
 
+    //仅适用于mysql、pgsql等支持limit offset语法的数据库
     public LinkedQueryWrapper limit(int limit) {
-        appendLimit(limit);
+        this.limit = limit;
         return this;
     }
 
-    public LinkedQueryWrapper limit(int offset, int limit) {
-        appendLimit(offset, limit);
+    //仅适用于mysql、pgsql等支持limit offset语法的数据库
+    public LinkedQueryWrapper offset(int offset) {
+        this.offset = offset;
         return this;
     }
 

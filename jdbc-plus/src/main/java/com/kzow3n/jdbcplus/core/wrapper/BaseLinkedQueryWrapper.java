@@ -37,7 +37,8 @@ public class BaseLinkedQueryWrapper {
     protected List<String> groupColumns;
     protected String having;
     protected StringBuilder orderBy;
-    protected String limit;
+    protected Integer limit;
+    protected Integer offset;
     protected String baseSql;
     protected String fullSql;
     protected List<Object> args;
@@ -244,8 +245,15 @@ public class BaseLinkedQueryWrapper {
 
         StringBuilder fullSqlBuilder = new StringBuilder();
         fullSqlBuilder.append(baseSql).append(orderBy.toString());
-        if (StringUtils.isNotBlank(limit)) {
-            fullSqlBuilder.append(limit);
+        if (limit != null) {
+            String paging;
+            if (offset != null) {
+                paging = String.format(" limit %d offset %d", limit, offset);
+            }
+            else {
+                paging = String.format(" limit %d", limit);
+            }
+            fullSqlBuilder.append(paging);
         }
         fullSql = fullSqlBuilder.toString();
     }
@@ -598,13 +606,5 @@ public class BaseLinkedQueryWrapper {
         if (blnDesc) {
             orderBy.append(" desc");
         }
-    }
-
-    protected void appendLimit(int limit) {
-        this.limit = String.format(" limit %d", limit);
-    }
-
-    protected void appendLimit(int offset, int limit) {
-        this.limit = String.format(" limit %d,%d", offset, limit);
     }
 }

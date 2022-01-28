@@ -26,8 +26,9 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         linkedQueryWrapper.formatSql();
         StringBuilder fullSqlBuilder = new StringBuilder();
         List<String> groupColumns = linkedQueryWrapper.getGroupColumns();
-        String limit = linkedQueryWrapper.getLimit();
-        boolean blnAppendLimit = blnLimit && StringUtils.isNotBlank(limit);
+        Integer limit = linkedQueryWrapper.getLimit();
+        Integer offset = linkedQueryWrapper.getOffset();
+        boolean blnAppendLimit = blnLimit && limit != null;
         if (CollectionUtils.isEmpty(groupColumns) && !blnAppendLimit) {
             fullSqlBuilder.append(String.format(linkedQueryWrapper.getSqlBuilder().toString(), "COUNT(1) SELECT_COUNT"));
         }
@@ -35,7 +36,14 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
             StringBuilder baseSqlBuilder = new StringBuilder();
             baseSqlBuilder.append(linkedQueryWrapper.getBaseSql());
             if (blnAppendLimit) {
-                baseSqlBuilder.append(limit);
+                String paging;
+                if (offset != null) {
+                    paging = String.format(" limit %d offset %d", limit, offset);
+                }
+                else {
+                    paging = String.format(" limit %d", limit);
+                }
+                baseSqlBuilder.append(paging);
             }
             fullSqlBuilder.append(String.format("SELECT COUNT(1) SELECT_COUNT FROM (%s) T", baseSqlBuilder));
         }
@@ -188,11 +196,6 @@ public class BaseLinkedQueryExecutor extends BaseExecutor {
         //待补充oracle的分页逻辑
         switch (dbTypeEnum) {
             default:
-                sql = linkedQueryWrapper.getBaseSql() +
-                        linkedQueryWrapper.getOrderBy().toString() +
-                        String.format(" limit %d,%d", (pageIndex - 1L) * pageSize, pageSize);
-                break;
-            case POSTGRE_SQL:
                 sql = linkedQueryWrapper.getBaseSql() +
                         linkedQueryWrapper.getOrderBy().toString() +
                         String.format(" limit %d offset %d", pageSize, (pageIndex - 1L) * pageSize);
