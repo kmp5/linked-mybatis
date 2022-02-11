@@ -220,6 +220,7 @@ public class BaseLinkedQueryWrapper {
         LinkedQueryWrapper linkedQueryWrapper = new LinkedQueryWrapper();
         consumer.accept(linkedQueryWrapper);
         linkedQueryWrapper.formatSql();
+        args.addAll(linkedQueryWrapper.getArgs());
         sqlBuilder.append(String.format("%s (%s) %s ", joinType, linkedQueryWrapper.getFullSql(), tableId));
     }
 
